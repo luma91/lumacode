@@ -8,7 +8,6 @@ import wifi370
 import lifx
 import lifx_presets
 import importlib
-import messenger as msg
 import json
 import getpass
 import atexit
@@ -39,7 +38,6 @@ back_room_camera = pyHS100.SmartPlug(get_smartdevices.address(category='smartplu
 subwoofer = pyHS100.SmartPlug(get_smartdevices.address(category='smartplugs', name='subwoofer'))
 
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-importlib.reload(msg)
 hostname = platform.node()
 home_path = getpass.getuser()
 
@@ -260,7 +258,6 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
             self.vpn_stats_b.hide()
 
         # Extra Stuff
-        self.actionMessenger.triggered.connect(lambda: run_messenger())  # Connect Messenger to Button
         msg = "Initialised -- Username: %s " % home_path.title()
         self.statusBar.showMessage(msg)
         print("ready\n")
@@ -355,7 +352,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
     def update_ui_styles(self):
 
         background_image = ''
-        bg_image_dir = os.path.join(os.path.dirname(__file__), 'qt', 'images', 'bg')
+        bg_image_dir = os.path.join(os.path.dirname(__file__), 'images', 'bg')
         random_number = random.randint(1, len(os.listdir(bg_image_dir)))
         num = 1
 
@@ -1071,11 +1068,6 @@ def nircmd(command):
     nircmd_path = 'C:/_etc/nircmdc.exe'
     cmd = nircmd_path + " " + command
     subprocess.Popen(cmd)
-
-
-def run_messenger():
-    messenger = msg.MessengerUi()
-    messenger.show()
 
 
 class CheckReceiver(QtCore.QObject):

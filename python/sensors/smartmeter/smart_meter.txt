@@ -1,5 +1,0 @@
-Spring 200
-
-SilverSpring Mesh Radio
-SECURE
-SPD100
