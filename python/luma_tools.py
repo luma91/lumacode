@@ -7,7 +7,6 @@ import time
 import wifi370
 import lifx
 import lifx_presets
-import importlib
 import json
 import getpass
 import atexit
