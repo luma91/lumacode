@@ -23,7 +23,7 @@ with open(os.path.join(base_path, 'bot_data.json')) as f:
     bot_data = json.loads(f.read())
 
 # Bot Data
-# Define this in bot_data.json
+# Define this in bot_data.json in same folder
 client_secret = bot_data['client_secret']
 client_id = bot_data['client_id']
 token = bot_data['token']
