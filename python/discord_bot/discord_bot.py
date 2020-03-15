@@ -9,23 +9,29 @@ import sys
 import threading
 import os
 import time
+import json
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.join(base_path, '..'))
 
 # Bot Stuff
 python_bin = sys.executable
 script_path = os.path.split(__file__)[0]
 color = [.3, .4, 0, 0.5]
 
+with open(os.path.join(base_path, 'bot_data.json')) as f:
+    bot_data = json.loads(f.read())
+
 # Bot Data
-client_secret = "aozC82J7EST5pshnh-SuLlk3WN3Gc4HB"
-client_id = "561850542863679519"
-token = "NTYxODUwNTQyODYzNjc5NTE5.XKCOuQ.d3B_ROmX71E36dSJTVj6BTUA95I"
-bot_name = "LumaBot"
-username = "LumaBot#5420"
-bot_id = 561850542863679519
-channel_id = 653081896196112407
-trusted_users = ['Luma91#9393', 'Yuichichibi#8516', 'ShadowDragon22#3108']
+# Define this in bot_data.json
+client_secret = bot_data['client_secret']
+client_id = bot_data['client_id']
+token = bot_data['token']
+bot_name = bot_data['bot_name']
+username = bot_data['username']
+bot_id = bot_data['bot_id']
+channel_id = bot_data['channel_id']
+trusted_users = bot_data['trusted_users']
 
 
 # Check For Episodes
