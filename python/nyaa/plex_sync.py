@@ -4,7 +4,6 @@ import shutil
 import json
 
 log_path = '/mnt/tmp/logs/plex_sync.log'
-
 logging.basicConfig(filename=log_path)
 logging.getLogger("discord.gateway").disabled = True
 logger = logging.getLogger()

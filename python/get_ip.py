@@ -12,14 +12,15 @@ import datetime
 import requests
 import time
 import json
+import luma_log
 from bs4 import BeautifulSoup
 
 host_name = platform.node()
 storage_location = '/mnt/tmp/ip_addr/'
 ip_file = '%s.wan-ip.txt' % host_name.lower()
 
-logging_path = os.path.join('/mnt/tmp/logs', 'get_ip.' + platform.node() + '.log')
-logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S', level=logging.INFO)
+# Get Logger
+logger = luma_log.main(__file__, platform.node())
 
 
 # Define Error
@@ -96,7 +97,7 @@ def write_to_disk(ip, location):
 
         now = datetime.datetime.now()
         data_to_write = '{"time": "%s", "ip": "%s", "country": "%s"}' % (now, ip, location)
-        logging.info('writing %s to disk.' % data_to_write)
+        logger.info('writing %s to disk.' % data_to_write)
         f = open(os.path.join(storage_location, ip_file), 'w+')
         f.write(data_to_write)
         f.close()
@@ -113,7 +114,7 @@ def write_to_disk(ip, location):
 # Main Function
 def ip_check():
 
-    logging.info("Starting IP Checker")
+    logger.info("Starting IP Checker")
     while True:
 
         ip = None
@@ -125,16 +126,16 @@ def ip_check():
             try:
                 try:
                     ip = get_ip(1)
-                    logging.info('My public IP address is: %s' % ip)
+                    logger.info('My public IP address is: %s' % ip)
 
                 except Exception as e:
-                    logging.error(e)
+                    logger.error(e)
                     ip = get_ip(2)
 
                 break
 
             except Exception as e:
-                logging.error(e)
+                logger.error(e)
                 pass
 
         # --- Get Country ---
@@ -146,19 +147,19 @@ def ip_check():
                 try:
                     try:
                         location = get_location(1, ip)
-                        logging.info('Used Method 1. Location: %s' % location)
+                        logger.info('Used Method 1. Location: %s' % location)
 
                     except Exception as e:
-                        logging.error(e)
+                        logger.error(e)
                         time.sleep(5)
 
                         location = get_location(2, ip)
-                        logging.info('Used Method 2. Location: %s' % location)
+                        logger.info('Used Method 2. Location: %s' % location)
 
                     break
 
                 except Exception as e:
-                    logging.error('Still Failing!\n\n%s' % e)
+                    logger.error('Still Failing!\n\n%s' % e)
                     location = 'Unknown'
 
                     # Write the unknown state to disk
