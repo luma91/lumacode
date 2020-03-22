@@ -18,12 +18,19 @@ def main(sync_op):
             full_source_path = os.path.join(source_path, directory)
             logger.info("src: %s \ndst: %s\n" % (full_source_path, backup_path))
 
-            cmd = ['/bin/sh', '-c',
-                   'rsync -urv --delete-before --chmod=ugo=rw  \"' + full_source_path + '\" \"' + backup_path + '\"']
-            subprocess.call(cmd)
+            cmd = ['/bin/sh', '-c', 'rsync -urv --delete-before --chmod=ugo=rw  \"' + full_source_path + '\" \"' + backup_path + '\"']
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+            logger.info(proc.stdout)
 
     if sync_op == 'code_sync':
         logger.info('running code sync')
+        source_path = '/mnt/Dropbox/lumacode/'
+        backup_path = '/mnt/lumacode'
+        cmd = ['/bin/sh', '-c', 'rsync -av \"' + source_path + '\" \"' + backup_path + '\" --delete']
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+        logger.info(proc.stdout)
+
+    logger.info('Done')
 
 
 if __name__ == "__main__":
