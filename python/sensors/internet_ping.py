@@ -30,10 +30,10 @@ def main():
                 data_average += average
                 print(result)
 
-    data_average = data_average / len(servers)
-    print('average: %.2f ms' % data_average)
+    data_average = '%.2f' % (data_average / len(servers))
+    print('average: %s ms' % data_average)
 
-    return data, data_average
+    return data_average
 
 
 if __name__ == "__main__":
