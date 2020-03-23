@@ -5,6 +5,9 @@ import subprocess
 
 def main():
 
+    data = []
+    data_average = 0
+
     # https://c.speedtest.net/speedtest-servers-static.php
     servers = [
         'speedtest.mel01.softlayer.com',
@@ -21,7 +24,16 @@ def main():
 
         for line in output:
             if 'min/avg/max/mdev' in line:
-                print(server, line)
+                average = float(line.split('=')[1].split('/')[1])
+                result = (server, line, average)
+                data.append(result)
+                data_average += average
+                print(result)
+
+    data_average = data_average / len(servers)
+    print('average: %s ms' % data_average)
+
+    return data, data_average
 
 
 if __name__ == "__main__":
