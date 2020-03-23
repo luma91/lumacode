@@ -31,7 +31,7 @@ def main():
                 print(result)
 
     data_average = data_average / len(servers)
-    print('average: %s ms' % data_average)
+    print('average: %.2f ms' % data_average)
 
     return data, data_average
 
