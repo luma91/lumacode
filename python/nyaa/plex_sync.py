@@ -1,17 +1,10 @@
-import logging
 import os
 import shutil
 import json
+import luma_log
 
-log_path = '/mnt/tmp/logs/plex_sync.log'
-logging.basicConfig(filename=log_path)
-logging.getLogger("discord.gateway").disabled = True
-logger = logging.getLogger()
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s %(name)-6s %(levelname)-4s %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+# Get Logger
+logger = luma_log.main(__file__)
 
 
 exceptions = [
@@ -30,12 +23,12 @@ def move_file(src, dst, ep):
 
     try:
         shutil.move(src, dst)
-        logging.info(">>> Moved %s!\n" % ep)
+        logger.info(">>> Moved %s!\n" % ep)
 
     except Exception as e:
-        logging.error(e)
-        logging.warning("Cannot move file: " + src + " skipping...")
-        logging.warning("src: %s dst: %s ep: %s" % (src, dst, ep))
+        logger.error(e)
+        logger.warning("Cannot move file: " + src + " skipping...")
+        logger.warning("src: %s dst: %s ep: %s" % (src, dst, ep))
 
 
 def run_sync(plex_directory, base_directory):
@@ -46,7 +39,7 @@ def run_sync(plex_directory, base_directory):
     with open(show_database, "r") as f:
         database = json.load(f)
 
-    logging.info("Running Plex Sync...\n\n")
+    logger.info("Running Plex Sync...\n\n")
     new_episodes = []
     episodes_to_transfer = []
 
@@ -67,11 +60,11 @@ def run_sync(plex_directory, base_directory):
 
                     if os.path.exists(os.path.join(plex_directory, show['name'])):
                         episodes_to_transfer.append(ep)
-                        logging.info("EXACT MATCH: \"%s\"\nSource: %s \nDestination: %s\n" % (show['name'], src, dst))
+                        logger.info("EXACT MATCH: \"%s\"\nSource: %s \nDestination: %s\n" % (show['name'], src, dst))
                         move_file(src, dst, ep)
 
     # Episodes with nowhere to go!
-    logging.info("Checking for stragglers...")
+    logger.info("Checking for stragglers...")
 
     # Clear and rescan for stragglers
     new_episodes = []
@@ -87,7 +80,7 @@ def run_sync(plex_directory, base_directory):
     for ep in new_episodes:
 
         if ep not in episodes_to_transfer:
-            logging.info("Running straggler check on %s\n" % ep)
+            logger.info("Running straggler check on %s\n" % ep)
             found_match = 0
 
             for show in shows:  # Shows being folders in PLEX Directory
@@ -107,23 +100,23 @@ def run_sync(plex_directory, base_directory):
                                 season_number = has_numbers(show)
 
                                 if season_number:
-                                    logging.info("SHOW: %s  NUMBER: %s" % (show, season_number))
+                                    logger.info("SHOW: %s  NUMBER: %s" % (show, season_number))
 
                                 if season_number:
                                     if season_number not in ep:
                                         continue  # Skip because not right season
 
-                                logging.info("MATCH FOUND: \"%s\" in \"%s\" " % (x, ep))
+                                logger.info("MATCH FOUND: \"%s\" in \"%s\" " % (x, ep))
                                 src = os.path.join(download_dir, ep)
                                 dst = os.path.join(plex_directory, show, ep)
-                                logging.info("Source: %s \nDestination: %s\n" % (src, dst))
+                                logger.info("Source: %s \nDestination: %s\n" % (src, dst))
                                 move_file(src, dst, ep)
                                 found_match = 1
 
             if found_match == 0:
-                logging.warning("Could not find anywhere for the file to go :(")
+                logger.warning("Could not find anywhere for the file to go :(")
 
-    logging.info("Plex Sync Finished.\n")
+    logger.info("Plex Sync Finished.\n")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
 import os
 import subprocess
+import sys
+
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.join(base_path, '..'))
 import luma_log
 
 # Get Logger
