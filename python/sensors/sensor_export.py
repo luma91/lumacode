@@ -8,6 +8,7 @@ import switch_bot_sensor
 import pi_temp
 import hs110_power_monitor
 import weatherzone
+import internet_ping
 import static_sensors
 import logging
 import threading
@@ -24,11 +25,12 @@ logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S')
 time_delay = 30
 data = {}
+ping = 0
 
 # List of Sensors
 sensor_list = ['media_room_temperature', 'media_room_humidity', 'media_room_battery',
                'bed_room_temperature', 'bed_room_humidity', 'bed_room_battery', 'Pi_Cpu_temp',
-               'hs110_volts', 'hs110_watts', 'outside_temp']
+               'hs110_volts', 'hs110_watts', 'outside_temp', 'ping']
 
 
 def get_current_time():
@@ -142,9 +144,20 @@ def convert_to_datapoints(data, name, start, end):
     return new_data
 
 
+# A place to store additional sensor ops on a thread
+def additional_sensors_thread():
+
+    global ping
+
+    while True:
+        ping = internet_ping.main()
+        time.sleep(20)
+
+
 def sensor_export_thread():
 
     global data
+    global ping
     logging.info("Initializing Sensor Export Thread")
 
     # Infinite Loop
@@ -193,6 +206,7 @@ def sensor_export_thread():
             new_data['hs110_volts'].append([hs110_monitor[0], now])
             new_data['hs110_watts'].append([hs110_monitor[1], now])
             new_data['outside_temp'].append([outside_temp, now])
+            new_data['ping'].append([ping, now])
 
             for row in new_data:
                 sensor_path = os.path.join(dir_path, row + '.json')
@@ -223,5 +237,8 @@ t1 = threading.Thread(target=bottle_thread)
 t1.start()
 
 t2 = threading.Thread(target=sensor_export_thread)
-t2 = threading.Thread(target=sensor_export_thread)
 t2.start()
+
+t3 = threading.Thread(target=additional_sensors_thread)
+t3.start()
+
