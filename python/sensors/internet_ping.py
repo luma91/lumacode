@@ -28,9 +28,9 @@ def main():
                 result = (server, line, average)
                 data.append(result)
                 data_average += average
-                print(result)
+                # print(result)
 
-    data_average = '%.2f' % (data_average / len(servers))
+    data_average = float('%.2f' % (data_average / len(servers)))
     print('average: %s ms' % data_average)
 
     return data_average
