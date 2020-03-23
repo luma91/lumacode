@@ -10,9 +10,23 @@ import threading
 import os
 import time
 import json
+import logging
+
+logging_path = '/mnt/tmp/logs'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s: %(message)s',
+    filemode='w',
+    filename=os.path.join(logging_path, 'discord_bot_full.log'),
+    datefmt='%d/%m/%Y %H:%M:%S'
+)
 
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.join(base_path, '..'))
+
+# Get Logger
+import luma_log
+logger = luma_log.main(__file__)
 
 # Bot Stuff
 python_bin = sys.executable
@@ -68,10 +82,6 @@ def discord_bot():
     import pyHS100
     from wakeonlan import send_magic_packet
     import get_smartdevices
-
-    # Get Logger
-    import luma_log
-    logger = luma_log.main(__file__)
 
     client = discord.Client()
 
@@ -376,9 +386,6 @@ def discord_bot():
 # Thread for Checking new Episodes!
 def check_episodes_thread():
 
-    # Get Logger
-    logger = luma_log.main(__file__)
-
     cmd = [python_bin, '-c', 'import sys\nsys.path.append(\'' + script_path + '\')\n' +
            'import discord_bot, importlib\nimportlib.reload(discord_bot)\ndiscord_bot.check_new_episodes()']
 
@@ -393,10 +400,6 @@ def check_episodes_thread():
 
 
 def discord_bot_thread():
-
-    # Get Logger
-    import luma_log
-    logger = luma_log.main(__file__)
 
     cmd = [python_bin, '-c', 'import sys\nsys.path.append(\'' + script_path + '\')\n' +
            'import discord_bot, importlib\nimportlib.reload(discord_bot)\ndiscord_bot.discord_bot()']
