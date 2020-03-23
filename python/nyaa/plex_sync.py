@@ -5,6 +5,7 @@ import luma_log
 
 # Get Logger
 logger = luma_log.main(__file__)
+logger.info('Plex Sync Initialized.')
 
 
 exceptions = [

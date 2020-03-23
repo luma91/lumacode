@@ -407,8 +407,8 @@ def discord_bot_thread():
     proc = subprocess.Popen(cmd).communicate()
     _stdout, _stderr = proc
 
-    if _stdout:
-        logger.info(_stdout)
+    # if _stdout:
+    #     logger.info(_stdout)
 
     if _stderr:
         logger.exception(_stderr)
