@@ -69,6 +69,10 @@ def discord_bot():
     from wakeonlan import send_magic_packet
     import get_smartdevices
 
+    # Get Logger
+    import luma_log
+    logger = luma_log.main(__file__)
+
     client = discord.Client()
 
     # Keywords to trigger the bot
@@ -90,7 +94,7 @@ def discord_bot():
             c.power_on()
 
         except Exception as e:
-            print(e)
+            logger.error(e)
 
         # Turn on Lights
         try:
@@ -98,7 +102,7 @@ def discord_bot():
             w.color(color[0], color[1], color[2], color[3])
 
         except Exception as e:
-            print(e)
+            logger.error(e)
 
         # Turn Off Camera
         try:
@@ -106,14 +110,14 @@ def discord_bot():
             back_room_camera.turn_off()
 
         except Exception as e:
-            print(e)
+            logger.error(e)
 
         # Turn on PC
         try:
             send_magic_packet('04.D9.F5.7C.0D.B3', '68.05.CA.9F.00.49')  # Turn on PC
 
         except Exception as e:
-            print(e)
+            logger.error(e)
 
         # Turn on Receiver
         try:
@@ -121,15 +125,16 @@ def discord_bot():
             rec.power_on()
 
         except Exception as e:
-            print(e)
+            logger.error(e)
 
     @client.event
     async def on_ready():
-        print("Bot Connected.")
-        channel = client.get_channel(channel_id)
+        logger.info("Bot Connected.")
 
-        response = "@everyone I'm Alive!"
-        await channel.send(response)
+        # channel = client.get_channel(channel_id)
+        # Commented out to prevent spam
+        # response = "@everyone I'm Alive!"
+        # await channel.send(response)
 
     @client.event
     async def on_message(message):
@@ -142,7 +147,7 @@ def discord_bot():
             back_room_camera = pyHS100.SmartPlug(get_smartdevices.address(category='smartplugs', name='back_room_camera'))
             rec = receiver.Main()
 
-            print('user: %s msg: %s' % (message.author, message.content))
+            logger.info('user: %s msg: %s' % (message.author, message.content))
 
             message_content = message.content.lower()
             response = None
@@ -356,7 +361,7 @@ def discord_bot():
             # Send Message
             if response is not None:
                 await message.channel.send(response)
-                print('Replying with: %s\n' % response)
+                logger.info('Replying with: %s\n' % response)
 
             # ----------------------------------------------------------
             # ----------------------------------------------------------
@@ -370,6 +375,10 @@ def discord_bot():
 
 # Thread for Checking new Episodes!
 def check_episodes_thread():
+
+    # Get Logger
+    logger = luma_log.main(__file__)
+
     cmd = [python_bin, '-c', 'import sys\nsys.path.append(\'' + script_path + '\')\n' +
            'import discord_bot, importlib\nimportlib.reload(discord_bot)\ndiscord_bot.check_new_episodes()']
 
@@ -377,12 +386,18 @@ def check_episodes_thread():
     _stdout, _stderr = proc
 
     if _stdout:
-        print(_stdout)
+        logger.info(_stdout)
+
     if _stderr:
-        print(_stderr)
+        logger.exception(_stderr)
 
 
 def discord_bot_thread():
+
+    # Get Logger
+    import luma_log
+    logger = luma_log.main(__file__)
+
     cmd = [python_bin, '-c', 'import sys\nsys.path.append(\'' + script_path + '\')\n' +
            'import discord_bot, importlib\nimportlib.reload(discord_bot)\ndiscord_bot.discord_bot()']
 
@@ -390,9 +405,10 @@ def discord_bot_thread():
     _stdout, _stderr = proc
 
     if _stdout:
-        print(_stdout)
+        logger.info(_stdout)
+
     if _stderr:
-        print(_stderr)
+        logger.exception(_stderr)
 
 
 # Run
