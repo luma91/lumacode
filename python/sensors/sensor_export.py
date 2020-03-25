@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S')
 time_delay = 30
 data = {}
-ping = 0
+ping = internet_ping.main()
 
 # List of Sensors
 sensor_list = ['media_room_temperature', 'media_room_humidity', 'media_room_battery',

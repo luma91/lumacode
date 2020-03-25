@@ -1,6 +1,6 @@
 import pyHS100
 
-sensor = pyHS100.SmartPlug('192.168.0.198')
+sensor = pyHS100.SmartPlug('192.168.0.199')
 
 
 def sensor_export():
