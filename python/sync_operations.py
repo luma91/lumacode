@@ -35,6 +35,15 @@ def main(sync_op):
         if "Windows" in platform.platform():
             logger.info("windows environment detected.")
 
+            source_path = 'Z:/lumacode'
+            backup_path = 'L:/'
+
+            # https://ss64.com/nt/robocopy.html
+            cmd = ['robocopy', source_path, backup_path, '/e',  '/xo',  '/purge']
+            # s.system('robocopy ' + source_path + ' ' + backup_path + ' /e /xo /purge')  # /XD .git .idea
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+            logger.info(proc.stdout)
+
         # Linux
         else:
             source_path = '/mnt/Dropbox/lumacode/'
