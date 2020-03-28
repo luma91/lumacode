@@ -30,13 +30,13 @@ def convert_payload(data):
         return sensor + ' ' + columns[0] + '=' + str(points[0])
 
     # Multiple Entries
-    elif any(x for x in ['router_cpu', 'router_mem'] if x in sensor):
+    elif any(x for x in ['router_cpu', 'router_mem', 'router_temp'] if x in sensor):
         output = sensor + ' '
         output += ','.join(map('='.join, processed_data.items()))
         return output
 
-    # Format Router Net
-    elif 'router_net' in sensor:
+    # Router Net
+    elif 'router_net' in sensor or 'router_ping_ext' in sensor:
         output = sensor + ',' + columns[0] + '=' + str(points[0]) + ' '
         del processed_data[columns[0]]
         output += ','.join(map('='.join, processed_data.items()))

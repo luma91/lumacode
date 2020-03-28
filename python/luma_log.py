@@ -1,19 +1,27 @@
 import logging
 import os
+import platform
 
-logging_path = '/mnt/tmp/logs'
+logging_path_linux = '/mnt/tmp/logs'
+logging_path_windows = 'T:/logs/'
+host_name = platform.node()
+operating_system = platform.platform()
 
 
-def main(application, machine_name=None):
+def main(application):
+
+    if 'linux' in operating_system.lower():
+        logging_path = logging_path_linux
+
+    else:
+        logging_path = logging_path_windows
+
     base_name = os.path.splitext(os.path.basename(application))[0]
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(base_name)
     logger.setLevel(logging.DEBUG)
 
-    if machine_name:
-        fh = logging.FileHandler(os.path.join(logging_path, base_name + '.' + machine_name + '.log'))
-    else:
-        fh = logging.FileHandler(os.path.join(logging_path, base_name + '.log'))
+    fh = logging.FileHandler(os.path.join(logging_path, base_name + '.' + host_name + '.log'))
 
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
@@ -26,3 +34,7 @@ def main(application, machine_name=None):
     logger.addHandler(fh)
 
     return logger
+
+
+if __name__ == "__main__":
+    main('test')

@@ -957,7 +957,7 @@ class PresetsWindow(QtWidgets.QMainWindow):
 
         QtWidgets.QWidget.__init__(self)
         self.setWindowTitle("Presets Window")
-        self.setStyleSheet("background-color: #222;")
+        self.setStyleSheet("background-color: #222; color: #fff;")
 
         if screen_height is False:
             self.setFixedSize(450, 80)

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import platform
 
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.join(base_path, '..'))
@@ -27,12 +28,20 @@ def main(sync_op):
             logger.info(proc.stdout)
 
     if sync_op == 'code_sync':
+
         logger.info('running code sync')
-        source_path = '/mnt/Dropbox/lumacode/'
-        backup_path = '/mnt/lumacode'
-        cmd = ['/bin/sh', '-c', 'rsync -av \"' + source_path + '\" \"' + backup_path + '\" --delete']
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
-        logger.info(proc.stdout)
+
+        # Windows
+        if "Windows" in platform.platform():
+            logger.info("windows environment detected.")
+
+        # Linux
+        else:
+            source_path = '/mnt/Dropbox/lumacode/'
+            backup_path = '/mnt/lumacode'
+            cmd = ['/bin/sh', '-c', 'rsync -av \"' + source_path + '\" \"' + backup_path + '\" --delete']
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+            logger.info(proc.stdout)
 
     logger.info('Done')
 

@@ -20,7 +20,7 @@ storage_location = '/mnt/tmp/ip_addr/'
 ip_file = '%s.wan-ip.txt' % host_name.lower()
 
 # Get Logger
-logger = luma_log.main(__file__, platform.node())
+logger = luma_log.main(__file__)
 
 
 # Define Error
