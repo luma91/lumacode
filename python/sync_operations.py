@@ -24,7 +24,7 @@ def main(sync_op):
             logger.info("src: %s \ndst: %s\n" % (full_source_path, backup_path))
 
             cmd = ['/bin/sh', '-c', 'rsync -urv --delete-before --chmod=ugo=rw  \"' + full_source_path + '\" \"' + backup_path + '\"']
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE)
             logger.info(proc.stdout)
 
     if sync_op == 'code_sync':

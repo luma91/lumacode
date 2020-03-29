@@ -1,10 +1,14 @@
-import urllib.request, shutil, subprocess, os, sys, logging, platform
+import urllib.request
+import os
+import sys
+import platform
 from xml.dom import minidom
 import json
+import luma_log
 
+# Get Logger
+logger = luma_log.main(__file__)
 platform_os = platform.platform()
-logging.basicConfig(format='%(levelname)s: %(message)s')
-logging.getLogger().setLevel(logging.DEBUG)
 
 # ------------------------------------------
 # Paths below! --------------
@@ -46,14 +50,14 @@ else:
 torrent_dir = os.path.join(directory, "transmission/watch")
 download_dir = os.path.join(directory, "transmission/completed")
 show_database = os.path.join(directory, "show_database.json")
-logging.debug("Torrent Directory: %s\n" % torrent_dir)
+logger.info("Torrent Directory: %s\n" % torrent_dir)
 
 # ------------------------------------------
 
 
 def run_scan(a):
 
-    logging.debug("Scanning: " + a['name'])
+    logger.info("Scanning: " + a['name'])
     a_filtered = str(a['name']).replace(" ", "+")
     url = (website + "&q=" + a_filtered + "+" + str(a['subgroup']) + "+" + video_quality + flags)
 
@@ -61,7 +65,7 @@ def run_scan(a):
     if "no" in a['fullhd'].lower():
         url = (website + "&q=" + a_filtered + "+" + str(a['subgroup']) + "+" + flags)
 
-    logging.debug(url)
+    logger.info(url)
     page = urllib.request.urlopen(url)
     page_data = page.read()
     xml_doc = minidom.parseString(page_data)
@@ -182,7 +186,7 @@ if nas_mode is 0:
 
             elif progress == 100:
                 self.scan_progress.setValue(progress)
-                logging.info("Scan Complete!")
+                logger.info("Scan Complete!")
                 self.thread1.exit()     # Scan is complete. exit scanning thread.
 
                 if len(download_list) > 0:
@@ -192,7 +196,7 @@ if nas_mode is 0:
                     self.download_button.setEnabled(0)
                     qt_item = QtWidgets.QTreeWidgetItem(self.available_tree)
                     qt_item.setText(0, str("No new episodes found..."))
-                    logging.info("No new episodes found")
+                    logger.info("No new episodes found")
 
             self.scan_progress.setValue(progress)
 
@@ -202,20 +206,20 @@ if nas_mode is 0:
                 torrent_file = os.path.join(torrent_dir, title + ".torrent")
                 try:
                     torrent = urllib.request.urlretrieve(download_list[title], torrent_file)
-                    logging.debug(torrent)
-                    logging.info("Downloading: %s" % title)
+                    logger.debug(torrent)
+                    logger.info("Downloading: %s" % title)
 
                 except Exception as e:
                     if discord is 1:
                         discord_bot.message("I couldn't download %s. :(" % title)  # Message Discord Chat of Failure.
-                    logging.error(e)
+                    logger.error(e)
 
                 # c = ['konsole', '-e', 'ktorrent \"' + torrent_file + '\" --silent']
                 # subprocess.Popen(c, shell=False)
 
             self.download_button.setEnabled(0)
             message_text = "The torrents should now be on the NAS!"
-            logging.info(message_text)
+            logger.info(message_text)
 
             msg = QtWidgets.QMessageBox(self)
             msg.setText(message_text)
@@ -252,23 +256,23 @@ if nas_mode is 0:
 
                         sanitized_path = value[1].strip()
                         show_path = os.path.join(plex_directory, sanitized_path)
-                        logging.info("Added new show: " + value[1])
-                        logging.info("Attempting to make directory in Plex: " + show_path)
+                        logger.info("Added new show: " + value[1])
+                        logger.info("Attempting to make directory in Plex: " + show_path)
                         os.mkdir(show_path)
                         self.update_showtree()
 
                     else:
-                        logging.error("You didn't really put anything in did you...\n")
+                        logger.error("You didn't really put anything in did you...\n")
 
                 except IndexError:
 
-                    logging.error("Error: Using wrong formatting!\n")
+                    logger.error("Error: Using wrong formatting!\n")
 
         def remove(self):
 
             # Get selected item
             selection = self.show_tree.currentItem().data(3, 0)
-            logging.info("Sel ID: " + str(selection))
+            logger.info("Sel ID: " + str(selection))
 
             with open(show_database, "r") as f:
                 shows = json.load(f)
@@ -279,7 +283,7 @@ if nas_mode is 0:
                                                           QtWidgets.QMessageBox.No)
 
             if remove_check == QtWidgets.QMessageBox.Yes:
-                logging.info("Removing Item.")
+                logger.info("Removing Item.")
 
                 # Open Database and check for shows
                 with open(show_database, "r") as f:
@@ -297,7 +301,7 @@ if nas_mode is 0:
                 self.update_showtree()
 
             if remove_check == QtWidgets.QMessageBox.No:
-                logging.info("Okay, I'll pretend that never happened.")
+                logger.info("Okay, I'll pretend that never happened.")
 
 
     class ScanShows(QtCore.QObject):
@@ -327,7 +331,7 @@ if nas_mode is 0:
                 for title, link, seeders, size in parsed_shows_list:
 
                     match = 0
-                    # logging.debug([title, link])
+                    # logger.debug([title, link])
 
                     # Filter List
                     for flag in ignore_flags:
@@ -346,14 +350,14 @@ if nas_mode is 0:
 
                             if match == 0:
 
-                                logging.info("Found an episode for %s!" % title)
+                                logger.info("Found an episode for %s!" % title)
                                 self.update_available_tree.emit(title)
                                 download_list.update({title: link})
 
                 current_id += 1
                 progress = (current_id / show_list_length) * 100
                 self.update_progress.emit(progress)
-                logging.debug("Progress: %s" % progress)
+                logger.debug("Progress: %s" % progress)
 
 
     if __name__ == '__main__':
@@ -370,7 +374,7 @@ else:
     # http://download.synology.com/download/Document/DeveloperGuide/Synology_Download_Station_Web_API.pdf
     # https://github.com/mb243/SynoDL/blob/master/synodl.sh
 
-    logging.warning("Running in NAS Mode.")
+    logger.warning("Running in NAS Mode.")
 
     class NyaaDownloaderNas:
 
@@ -381,14 +385,14 @@ else:
 
             # Start the scan
             self.nas_scanshows()
-            logging.info("Scan Complete!")
+            logger.info("Scan Complete!")
 
             if len(download_list) > 0:
 
                 self.nas_download()
 
             else:
-                logging.info("No new episodes found")
+                logger.info("No new episodes found")
 
         def nas_scanshows(self):
 
@@ -415,8 +419,7 @@ else:
                     for flag in ignore_flags:
                         if flag in title:
                             ignore = 1
-                            logging.debug('Ignoring %s!' % title)
-
+                            logger.debug('Ignoring %s!' % title)
 
                     if ignore == 0:
                         if str(a['name']) in title:
@@ -429,12 +432,12 @@ else:
                                     continue
 
                             if match == 0:
-                                logging.info("Found an episode for %s!" % title)
+                                logger.info("Found an episode for %s!" % title)
                                 download_list.update({title: link})
 
                 current_id += 1
                 progress = (current_id / show_list_length) * 100
-                logging.debug("Progress: %s" % progress)
+                logger.debug("Progress: %s" % progress)
 
         @staticmethod
         def nas_download():
@@ -443,7 +446,7 @@ else:
             for title in download_list:
                 torrent_file = os.path.join(torrent_dir, title + ".torrent")
                 urllib.request.urlretrieve(download_list[title], torrent_file)
-                logging.info("Downloading: %s" % title)
+                logger.info("Downloading: %s" % title)
 
     # Run the Program
     NyaaDownloaderNas()

@@ -4,17 +4,22 @@ import platform
 
 logging_path_linux = '/mnt/tmp/logs'
 logging_path_windows = 'T:/logs/'
+logging_path_synology = '/volume1/temp/mounts/tmp/logs'
 host_name = platform.node()
 operating_system = platform.platform()
 
 
 def main(application):
 
-    if 'linux' in operating_system.lower():
-        logging_path = logging_path_linux
+    if 'ds918' in host_name.lower():
+        logging_path = logging_path_synology
 
     else:
-        logging_path = logging_path_windows
+        if 'linux' in operating_system.lower():
+            logging_path = logging_path_linux
+
+        else:
+            logging_path = logging_path_windows
 
     base_name = os.path.splitext(os.path.basename(application))[0]
     logging.basicConfig(level=logging.INFO)
