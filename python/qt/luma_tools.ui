@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>335</width>
-    <height>995</height>
+    <height>1057</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -40,7 +40,7 @@
    <string>Luma Tools</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset>
     <normaloff>:/images/images/39134-1159060930.png</normaloff>:/images/images/39134-1159060930.png</iconset>
   </property>
   <property name="styleSheet">
@@ -69,16 +69,7 @@
     <property name="spacing">
      <number>0</number>
     </property>
-    <property name="leftMargin">
-     <number>0</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
-    <property name="rightMargin">
-     <number>0</number>
-    </property>
-    <property name="bottomMargin">
+    <property name="margin">
      <number>0</number>
     </property>
     <item>
@@ -87,16 +78,7 @@
        <property name="spacing">
         <number>4</number>
        </property>
-       <property name="leftMargin">
-        <number>15</number>
-       </property>
-       <property name="topMargin">
-        <number>15</number>
-       </property>
-       <property name="rightMargin">
-        <number>15</number>
-       </property>
-       <property name="bottomMargin">
+       <property name="margin">
         <number>15</number>
        </property>
        <item>
@@ -1146,16 +1128,7 @@
          <property name="spacing">
           <number>0</number>
          </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
+         <property name="margin">
           <number>0</number>
          </property>
          <item>
@@ -1381,6 +1354,24 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="receiver_headphones">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>H</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -1489,16 +1480,7 @@
        </item>
        <item>
         <layout class="QHBoxLayout" name="camera_layout">
-         <property name="leftMargin">
-          <number>5</number>
-         </property>
-         <property name="topMargin">
-          <number>5</number>
-         </property>
-         <property name="rightMargin">
-          <number>5</number>
-         </property>
-         <property name="bottomMargin">
+         <property name="margin">
           <number>5</number>
          </property>
          <item>

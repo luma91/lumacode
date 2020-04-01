@@ -237,6 +237,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
         self.receiver_pc.released.connect(lambda: self.receiver_control(3, 0))
         self.receiver_pc_2.released.connect(lambda: self.receiver_control(6, 0))
         self.receiver_tv.released.connect(lambda: self.receiver_control(5, 0))
+        self.receiver_headphones.released.connect(lambda: self.receiver_control(7, 0))
         self.receiver_bedroom.released.connect(lambda: self.receiver_control(4, 0))
         self.receiver_control(0, 0)
 
@@ -394,6 +395,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
         receiver_zone_stylesheet = '.QPushButton{background-color: #003;} .QPushButton:hover{background-color:#444;}'
         self.receiver_bedroom.setStyleSheet(receiver_zone_stylesheet)
         self.receiver_pc.setStyleSheet(receiver_zone_stylesheet)
+        self.receiver_headphones.setStyleSheet(receiver_zone_stylesheet)
         self.receiver_pc_2.setStyleSheet(receiver_zone_stylesheet)
         self.receiver_tv.setStyleSheet(receiver_zone_stylesheet)
 
@@ -892,6 +894,12 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
             if mode == 6:
                 rec.set_input(value='pc2')
                 msg = ">> Receiver Zone: PC 2"
+
+            if mode == 7:
+                rec.set_input(value='headphones')
+                subwoofer.turn_off()
+
+                msg = ">> Receiver Zone: Headphones"
 
             # Update Status
             print(msg)

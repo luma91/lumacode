@@ -86,6 +86,9 @@ class Main:
             telnet.write("2SPK\r\n".encode('ascii'))
             telnet.write("15FN\r\n".encode('ascii'))
 
+        if value == "headphones":
+            telnet.write("0SPK\r\n".encode('ascii'))
+
         telnet.close()
 
 
