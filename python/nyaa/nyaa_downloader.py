@@ -17,6 +17,7 @@ base_directory_nas = "/volume1/Media/.temp"
 flags = "&c=1_2&f=0"  # These do something, I'm totally sure of it...
 video_quality = "1080p"
 ignore_flags = ["mini", "batch", "batched", "NoobSubs", "Where", "Hardsub", "60FPS"]  # Keywords to ignore
+download_list = []
 
 
 def main():
@@ -26,7 +27,6 @@ def main():
     logger = luma_log.main(__file__)
 
     nas_mode = 0
-    download_list = {}
 
     if "ubuntu" in platform_os.lower():
         from PyQt5 import QtWidgets, uic, QtCore
@@ -36,6 +36,7 @@ def main():
     # Windows
     elif "windows" in platform_os.lower():
         from PyQt5 import QtWidgets, uic, QtCore
+        plex_directory = "M:/Anime"
         directory = base_directory_windows
 
     # Synology
@@ -244,7 +245,13 @@ def main():
                             show_path = os.path.join(plex_directory, sanitized_path)
                             logger.info("Added new show: " + value[1])
                             logger.info("Attempting to make directory in Plex: " + show_path)
-                            os.mkdir(show_path)
+
+                            try:
+                                os.mkdir(show_path)
+
+                            except Exception as e:
+                                logger.error(e)
+
                             self.update_showtree()
 
                         else:
