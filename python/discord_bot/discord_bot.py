@@ -262,6 +262,12 @@ def discord_bot():
                         send_magic_packet('F8.32.E4.6D.D4.B4')  # Turn on PC
                         response = "Okay."
 
+                    elif (x for x in ["playstation", "ps3", "ps4"] if x in message_content.lower()):
+
+                        sub.turn_off()
+                        rec.set_input('bedroom-hdmi')
+                        response = "Enjoy your gaming!"
+
                     elif "anime" in message_content:
 
                         sub.turn_on()

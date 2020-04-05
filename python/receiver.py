@@ -86,6 +86,10 @@ class Main:
             telnet.write("2SPK\r\n".encode('ascii'))
             telnet.write("15FN\r\n".encode('ascii'))
 
+        if value == "bedroom-hdmi":
+            telnet.write("0SPK\r\n".encode('ascii'))
+            telnet.write("FN04")
+
         if value == "headphones":
             telnet.write("0SPK\r\n".encode('ascii'))
 
@@ -94,4 +98,4 @@ class Main:
 
 if __name__ == "__main__":
     rec = Main()
-    print(rec.get_power())
+    print(rec.get_input())
