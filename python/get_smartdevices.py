@@ -49,11 +49,11 @@ def rec_input(operation, query):
             for item in rec_inputs:
 
                 if operation == "code":
-                    if item['name'] in query:
+                    if item['name'] == query:
                         return item['code']
 
                 if operation == "name":
-                    if item['code'] in query:
+                    if item['code'] == query:
                         return item['name']
 
     return output

@@ -76,23 +76,28 @@ class Main:
 
         if value == "pc":
             telnet.write("1SPK\r\n".encode('ascii'))
-            telnet.write((code + "FN\r\n").encode('ascii'))
+            package = (code + "FN\r\n").encode('ascii')
+            telnet.write(package)
 
         if value == "pc2":
             telnet.write("1SPK\r\n".encode('ascii'))
-            telnet.write((code + "FN\r\n").encode('ascii'))
+            package = (code + "FN\r\n").encode('ascii')
+            telnet.write(package)
 
         if value == "tv":
             telnet.write("1SPK\r\n".encode('ascii'))
-            telnet.write((code + "FN\r\n").encode('ascii'))
+            package = (code + "FN\r\n").encode('ascii')
+            telnet.write(package)
 
         if value == "bedroom":
             telnet.write("2SPK\r\n".encode('ascii'))
-            telnet.write((code + "FN\r\n").encode('ascii'))
+            package = (code + "FN\r\n").encode('ascii')
+            telnet.write(package)
 
         if value == "bedroom-hdmi":
             telnet.write("0SPK\r\n".encode('ascii'))
-            telnet.write((code + "FN\r\n").encode('ascii'))
+            package = (code + "FN\r\n").encode('ascii')
+            telnet.write(package)
 
         if value == "headphones":
             telnet.write("0SPK\r\n".encode('ascii'))

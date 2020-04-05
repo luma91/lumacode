@@ -243,9 +243,9 @@ def save_on_exit():
 
 def write_data(new_data):
 
-    for row in new_data:
-        sensor_path = os.path.join(dir_path, row + '.json')
-        export_data = {row: new_data[row]}
+    for sensor in sensor_list:
+        sensor_path = os.path.join(dir_path, sensor + '.json')
+        export_data = {sensor: new_data[sensor]}
 
         print('writing to: %s' % sensor_path)
         with open(sensor_path, 'w+') as json_file:
