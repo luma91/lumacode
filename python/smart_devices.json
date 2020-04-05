@@ -30,5 +30,22 @@
 				
                 {"name": "Table", "address": "192.168.0.130", "mac": "D0:73:D5:29:94:7B", "zone": "bedroom"}
 			]
-	} 
+	},
+
+	{
+		"category": "receiver_inputs",
+
+			"inputs": [
+
+				{"name":  "pc", "code":  "06"},
+
+				{"name":  "pc2", "code":  "10"},
+
+				{"name":  "tv", "code":  "01"},
+
+				{"name":  "bedroom", "code":  "15"},
+
+				{"name":  "bedroom-hdmi", "code":  "04"}
+			]
+	}
 ]

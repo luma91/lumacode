@@ -1,6 +1,7 @@
 # Pioneer Receiver Control
 
 import telnetlib
+import get_smartdevices
 receiver_ip = '192.168.0.177'
 tn_in = "\r\n".encode('ascii')
 
@@ -28,7 +29,6 @@ class Main:
         telnet.write((command + "\r\n").encode('ascii'))
         return telnet
 
-    # Functions
     def power_on(self):
         telnet = self.send_command("PO")
         telnet.close()
@@ -60,35 +60,39 @@ class Main:
         telnet.close()
 
     def get_input(self):
+
         telnet = self.start_connection()
         telnet.write("?F\r\n".encode('ascii'))
         output = telnet.read_until(tn_in)
-        current_input = output.decode('ascii')
-        return current_input
+        current_input = output.decode('ascii').split('\r')[0]
+
+        input_name = get_smartdevices.rec_input(operation="name", query=current_input)
+        return current_input, input_name
 
     def set_input(self, value):
 
+        code = get_smartdevices.rec_input(operation="code", query=value)
         telnet = self.start_connection()
 
         if value == "pc":
             telnet.write("1SPK\r\n".encode('ascii'))
-            telnet.write("06FN\r\n".encode('ascii'))
+            telnet.write(code + "FN\r\n".encode('ascii'))
 
         if value == "pc2":
             telnet.write("1SPK\r\n".encode('ascii'))
-            telnet.write("10FN\r\n".encode('ascii'))
+            telnet.write(code + "FN\r\n".encode('ascii'))
 
         if value == "tv":
             telnet.write("1SPK\r\n".encode('ascii'))
-            telnet.write("01FN\r\n".encode('ascii'))
+            telnet.write(code + "FN\r\n".encode('ascii'))
 
         if value == "bedroom":
             telnet.write("2SPK\r\n".encode('ascii'))
-            telnet.write("15FN\r\n".encode('ascii'))
+            telnet.write(code + "FN\r\n".encode('ascii'))
 
         if value == "bedroom-hdmi":
             telnet.write("0SPK\r\n".encode('ascii'))
-            telnet.write("04FN\r\n".encode('ascii'))
+            telnet.write(code + "FN\r\n".encode('ascii'))
 
         if value == "headphones":
             telnet.write("0SPK\r\n".encode('ascii'))

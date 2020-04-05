@@ -16,7 +16,8 @@ import time
 import os
 import json
 from calendar import timegm
-from datetime import datetime, timedelta
+from datetime import datetime
+import atexit
 
 dir_path = '/mnt/tmp/sensor_data'
 json_export_path = os.path.join(dir_path, 'sensors')
@@ -27,10 +28,14 @@ time_delay = 30
 data = {}
 ping = internet_ping.main()
 
+# Disregarded Sensors: bed_room_battery, media_room_battery
 # List of Sensors
-sensor_list = ['media_room_temperature', 'media_room_humidity', 'media_room_battery',
-               'bed_room_temperature', 'bed_room_humidity', 'bed_room_battery', 'Pi_Cpu_temp',
-               'hs110_volts', 'hs110_watts', 'outside_temp', 'ping']
+
+sensor_list = [
+    'media_room_temperature', 'media_room_humidity',
+    'bed_room_temperature', 'bed_room_humidity', 'Pi_Cpu_temp',
+    'hs110_volts', 'hs110_watts', 'outside_temp', 'ping'
+]
 
 
 def get_current_time():
@@ -194,12 +199,12 @@ def sensor_export_thread():
                 if sensor['sensor_name'] == 'bed_room':
                     new_data['bed_room_temperature'].append([sensor['temperature'], now])
                     new_data['bed_room_humidity'].append([sensor['humidity'], now])
-                    new_data['bed_room_battery'].append([sensor['battery'], now])
+                    # new_data['bed_room_battery'].append([sensor['battery'], now])
 
                 if sensor['sensor_name'] == 'media_room':
                     new_data['media_room_temperature'].append([sensor['temperature'], now])
                     new_data['media_room_humidity'].append([sensor['humidity'], now])
-                    new_data['media_room_battery'].append([sensor['battery'], now])
+                    # new_data['media_room_battery'].append([sensor['battery'], now])
 
             # Other Sensors
             new_data['Pi_Cpu_temp'].append([pi_current_temp, now])
@@ -208,22 +213,18 @@ def sensor_export_thread():
             new_data['outside_temp'].append([outside_temp, now])
             new_data['ping'].append([ping, now])
 
-            for row in new_data:
-                sensor_path = os.path.join(dir_path, row + '.json')
-                export_data = {row: new_data[row]}
-
-                print('writing to: %s' % sensor_path)
-                with open(sensor_path, 'w+') as json_file:
-                    json.dump(export_data, json_file, indent=2)
+            # Write Data to Disk
+            write_data(new_data)
+            stored_data = new_data
 
             # Get Static Sensor Data
             static_sensor_data = static_sensors.main()
 
             for sensor in static_sensor_data:
-                new_data.update({sensor: [[static_sensor_data[sensor], now]]})
+                stored_data.update({sensor: [[static_sensor_data[sensor], now]]})
 
             # Update Data in Memory
-            data = new_data
+            data = stored_data
             print('Finished Writing Data!')
 
         except Exception as e:
@@ -233,12 +234,32 @@ def sensor_export_thread():
         time.sleep(time_delay)
 
 
+def save_on_exit():
+
+    global data
+    logging.info('saving data to disk before closing...')
+    write_data(data)
+
+
+def write_data(new_data):
+
+    for row in new_data:
+        sensor_path = os.path.join(dir_path, row + '.json')
+        export_data = {row: new_data[row]}
+
+        print('writing to: %s' % sensor_path)
+        with open(sensor_path, 'w+') as json_file:
+            json.dump(export_data, json_file, indent=2)
+
+
+# Register Exit Handler
+atexit.register(save_on_exit)
+
+# Initialize and Start Threads
 t1 = threading.Thread(target=bottle_thread)
-t1.start()
-
 t2 = threading.Thread(target=sensor_export_thread)
-t2.start()
-
 t3 = threading.Thread(target=additional_sensors_thread)
-t3.start()
 
+t1.start()
+t2.start()
+t3.start()
