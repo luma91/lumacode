@@ -23,6 +23,16 @@ def load_data():
 
 def main():
 
+    """
+
+    Status Codes
+
+    0 = Disconnected
+    1 = Connected
+    2 = Unknown
+
+    """
+
     data = load_data()
 
     new_data = []
@@ -36,6 +46,7 @@ def main():
         recorded_time = datetime.datetime.strptime(machine['data']['time'], '%Y-%m-%d %H:%M:%S.%f')
 
         difference = now - recorded_time
+
         if difference.seconds < 180:
             active = 1
 
@@ -43,11 +54,16 @@ def main():
             active = 0
 
         # Check if matches VPN Country
-        if machine['data']['country'] == 'Singapore' and active == 1:
-            connected = 1
+        if active == 1:
+            if machine['data']['country'] == 'Singapore':
+                connected = 1
 
-        else:
-            connected = 0
+            else:
+                connected = 0
+
+        # Unknown Status
+        elif active == 0:
+            connected = 2
 
         # Append new data
         new_data.append({'machine': machine['machine'], 'vpn_connected': connected})
@@ -56,8 +72,5 @@ def main():
 
 
 if __name__ == "__main__":
-
-    import time
-    while True:
-        data = main()
-        time.sleep(5)
+    a = main()
+    print(a)

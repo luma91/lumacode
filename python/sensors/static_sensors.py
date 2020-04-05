@@ -42,6 +42,9 @@ def main():
     subwoofer = get_smartplug_state('subwoofer')
     media_room_camera = get_smartplug_state('media_room_camera')
     back_room_camera = get_smartplug_state('back_room_camera')
+    receiver_power = 0
+    receiver_vol = 0
+    receiver_input = 0
 
     # IP / VPN Sensors
     for row in ip_sensor_data:
@@ -56,7 +59,10 @@ def main():
         'media_room_camera': media_room_camera,
         'back_room_camera': back_room_camera,
         'vpn_nyaa': vpn_nyaa,
-        'vpn_iptorrents': vpn_iptorrents
+        'vpn_iptorrents': vpn_iptorrents,
+        'receiver_power': receiver_power,
+        'receiver_vol': receiver_vol,
+        'receiver_input': receiver_input
     }
 
     return data
