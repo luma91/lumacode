@@ -54,7 +54,7 @@ def get_receiver_state():
         time.sleep(.5)
         current_input = rec.get_input()[1]
 
-        output['power_state'] = power_state
+        output['power'] = power_state
         output['vol'] = current_volume
         output['input'] = current_input
 
