@@ -9,7 +9,7 @@ logger.info('Plex Sync Initialized.')
 
 
 exceptions = [
-    "no", "a", "to", ".", "in", "ni", "wa", "yo", "ga", "720p", "1080p", "BD", '-', '[', ']'
+    "no", "a", "to", ".", "in", "ni", "wa", "yo", "ga", "720p", "1080p", "BD", '-', '[', ']', 'x264', 'flac'
 ]
 
 
@@ -94,25 +94,28 @@ def run_sync(plex_directory, base_directory):
                         # Block Common Words
                         if x not in exceptions:
 
-                            # If a word is matched (that is 5 characters or more)
-                            if x in ep and len(x) > 4:
+                            # Prevent Sub Groups from being Matched
+                            if '[' or ']' not in x:
 
-                                # Simple check for season number (i.e. Chihiyafuru S3)
-                                season_number = has_numbers(show)
+                                # If a word is matched (that is 4 characters or more)
+                                if x in ep and len(x) >= 4:
 
-                                if season_number:
-                                    logger.info("SHOW: %s  NUMBER: %s" % (show, season_number))
+                                    # Simple check for season number (i.e. Chihiyafuru S3)
+                                    season_number = has_numbers(show)
 
-                                if season_number:
-                                    if season_number not in ep:
-                                        continue  # Skip because not right season
+                                    if season_number:
+                                        logger.info("SHOW: %s  NUMBER: %s" % (show, season_number))
 
-                                logger.info("MATCH FOUND: \"%s\" in \"%s\" " % (x, ep))
-                                src = os.path.join(download_dir, ep)
-                                dst = os.path.join(plex_directory, show, ep)
-                                logger.info("Source: %s \nDestination: %s\n" % (src, dst))
-                                move_file(src, dst, ep)
-                                found_match = 1
+                                    if season_number:
+                                        if season_number not in ep:
+                                            continue  # Skip because not right season
+
+                                    logger.info("MATCH FOUND: \"%s\" in \"%s\" " % (x, ep))
+                                    src = os.path.join(download_dir, ep)
+                                    dst = os.path.join(plex_directory, show, ep)
+                                    logger.info("Source: %s \nDestination: %s\n" % (src, dst))
+                                    move_file(src, dst, ep)
+                                    found_match = 1
 
             if found_match == 0:
                 logger.warning("Could not find anywhere for the file to go :(")
