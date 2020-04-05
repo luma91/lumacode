@@ -88,7 +88,7 @@ class Main:
 
         if value == "bedroom-hdmi":
             telnet.write("0SPK\r\n".encode('ascii'))
-            telnet.write("FN04")
+            telnet.write("04FN\r\n".encode('ascii'))
 
         if value == "headphones":
             telnet.write("0SPK\r\n".encode('ascii'))
