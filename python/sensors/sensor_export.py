@@ -25,10 +25,13 @@ logging_path = os.path.join('/mnt/tmp/logs', 'sensor_export.log')
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S')
 time_delay = 30
+
 data = {}
+static_data = {}
+
+# Get Ping on Reset
 ping = internet_ping.main()
 
-# Disregarded Sensors: bed_room_battery, media_room_battery
 # List of Sensors
 
 sensor_list = [
@@ -36,6 +39,11 @@ sensor_list = [
     'bed_room_temperature', 'bed_room_humidity', 'Pi_Cpu_temp',
     'hs110_volts', 'hs110_watts', 'outside_temp', 'ping'
 ]
+
+# Get Static Sensors
+static_sensor_list = []
+for x in static_sensors.main():
+    static_sensor_list.append(x)
 
 
 def get_current_time():
@@ -54,16 +62,6 @@ def get_data():
     input_data = {}
 
     for sensor in sensor_list:
-
-        '''
-        # Only Load Target Sensor Data
-        if target_name:
-            if sensor.lower() in target_name.lower():
-                sensor_path = os.path.join(dir_path, sensor + '.json')
-
-                with open(sensor_path) as json_file:
-                    input_data.update(json.load(json_file))
-        '''
 
         # Load All Sensor Data
         sensor_path = os.path.join(dir_path, sensor + '.json')
@@ -84,6 +82,8 @@ def get_data():
 def bottle_thread():
 
     global data
+    global static_data
+
     logging.info("Initializing Bottle Thread")
     app = Bottle()
 
@@ -101,11 +101,6 @@ def bottle_thread():
     @app.post('/search')
     def search():
 
-        # Get Static Sensors
-        static_sensor_list = []
-        for x in static_sensors.main():
-            static_sensor_list.append(x)
-
         print('Static Sensors %s' % static_sensor_list)
 
         return HTTPResponse(body=dumps(sensor_list + static_sensor_list), headers={'Content-Type': 'application/json'})
@@ -119,7 +114,18 @@ def bottle_thread():
 
         for target in request.json['targets']:
             name = target['target']
-            new_data = convert_to_datapoints(data, name, start, end)
+
+            for sensor in sensor_list:
+
+                if name == sensor:
+                    new_data = convert_to_datapoints(data, name, start, end)
+
+            if new_data is None:
+
+                for sensor in static_sensor_list:
+
+                    if name == sensor:
+                        new_data = convert_to_datapoints(static_data, name, start, end)
 
         body = dumps(new_data)
         return HTTPResponse(body=body, headers={'Content-Type': 'application/json'})
@@ -129,20 +135,20 @@ def bottle_thread():
 
 
 # Convert Incoming Query to Datapoints for Grafana
-def convert_to_datapoints(data, name, start, end):
+def convert_to_datapoints(input_data, name, start, end):
 
     lower = convert_to_time_ms(start)
     upper = convert_to_time_ms(end)
 
     new_data = [{"target": name, "datapoints": []}]
 
-    for x in data:
+    for x in input_data:
 
         # Check if name matches
         if name == x:
 
             # Check if within range
-            for point in data[x]:
+            for point in input_data[x]:
                 if lower < point[1] < upper:
                     new_data[0]["datapoints"].append(point)
 
@@ -155,8 +161,30 @@ def additional_sensors_thread():
     global ping
 
     while True:
+
         ping = internet_ping.main()
-        time.sleep(20)
+        time.sleep(15)
+
+
+def static_sensor_thread():
+
+    global static_data
+
+    while True:
+
+        # Get Static Sensor Data
+        static_sensor_data = static_sensors.main()
+
+        now = get_current_time()
+        new_data = {}
+
+        for sensor in static_sensor_data:
+            new_data.update({sensor: [[static_sensor_data[sensor], now]]})
+
+        static_data = new_data
+
+        # Standard Delay
+        time.sleep(5)
 
 
 def sensor_export_thread():
@@ -217,12 +245,6 @@ def sensor_export_thread():
             write_data(new_data)
             stored_data = new_data
 
-            # Get Static Sensor Data
-            static_sensor_data = static_sensors.main()
-
-            for sensor in static_sensor_data:
-                stored_data.update({sensor: [[static_sensor_data[sensor], now]]})
-
             # Update Data in Memory
             data = stored_data
             print('Finished Writing Data!')
@@ -258,8 +280,10 @@ atexit.register(save_on_exit)
 # Initialize and Start Threads
 t1 = threading.Thread(target=bottle_thread)
 t2 = threading.Thread(target=sensor_export_thread)
-t3 = threading.Thread(target=additional_sensors_thread)
+t3 = threading.Thread(target=static_sensor_thread)
+t4 = threading.Thread(target=additional_sensors_thread)
 
 t1.start()
 t2.start()
 t3.start()
+t4.start()

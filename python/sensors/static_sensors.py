@@ -36,7 +36,9 @@ def get_smartplug_state(name):
 def get_receiver_state():
 
     import receiver
+    import json
 
+    export_path = '/mnt/tmp/sensor_data/sensors'
     output = {'power': 0, 'vol': 0, "input": 0}
 
     try:
@@ -49,14 +51,21 @@ def get_receiver_state():
         else:
             power_state = 0
 
-        time.sleep(.5)
+        time.sleep(1)
         current_volume = rec.get_volume()[1]
-        time.sleep(.5)
+        time.sleep(1)
         current_input = rec.get_input()[1]
 
         output['power'] = power_state
         output['vol'] = current_volume
         output['input'] = current_input
+
+        # Write to File
+        json_output = json.dumps(output)
+        path = os.path.join(export_path, 'receiver.json')
+
+        with open(path, 'w+') as outfile:
+            outfile.write(json_output)
 
     except Exception as e:
         print(e)

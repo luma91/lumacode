@@ -64,7 +64,7 @@ class Main:
         telnet = self.start_connection()
         telnet.write("?F\r\n".encode('ascii'))
         output = telnet.read_until(tn_in)
-        current_input = output.decode('ascii').split('\r')[0]
+        current_input = output.decode('ascii').split('\r')[0].replace('FN', '')
 
         input_name = get_smartdevices.rec_input(operation="name", query=current_input)
         return current_input, input_name
