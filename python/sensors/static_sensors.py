@@ -37,9 +37,15 @@ def get_receiver_state():
 
     import receiver
     import json
+    import datetime
 
     export_path = '/mnt/tmp/sensor_data/sensors'
-    output = {'power': 0, 'vol': 0, "input": 0}
+    path = os.path.join(export_path, 'receiver.json')
+
+    now = datetime.datetime.now()
+    time_now = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    output = {'sensor_name': 'receiver', 'time': time_now, 'power': 0, 'raw_vol': 0, 'vol': 0, "input": 0}
 
     try:
         rec = receiver.Main()
@@ -52,23 +58,24 @@ def get_receiver_state():
             power_state = 0
 
         time.sleep(1)
-        current_volume = rec.get_volume()[1]
+        current_volume = rec.get_volume()
+
         time.sleep(1)
         current_input = rec.get_input()[1]
 
         output['power'] = power_state
-        output['vol'] = current_volume
+        output['raw_vol'] = current_volume[0]
+        output['vol'] = current_volume[1]
         output['input'] = current_input
-
-        # Write to File
-        json_output = json.dumps(output)
-        path = os.path.join(export_path, 'receiver.json')
-
-        with open(path, 'w+') as outfile:
-            outfile.write(json_output)
 
     except Exception as e:
         print(e)
+        pass
+
+    # Write to File
+    json_output = json.dumps(output)
+    with open(path, 'w+') as outfile:
+        outfile.write(json_output)
 
     return output
 

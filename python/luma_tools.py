@@ -1085,24 +1085,36 @@ class CheckReceiver(QtCore.QObject):
 
     def main(self):
 
+        windows_path = 'T:\\sensor_data\\sensors\\receiver.json'
+        receiver_path = '/mnt/tmp/sensor_data/sensors/receiver.json'
+
+        if os_version is 'Windows':
+            receiver_path = windows_path
+
         while True:
 
             try:
-
                 # Check Receiver Status
-                rec = receiver.Main()
-                current_power = rec.get_power()
+                # rec = receiver.Main()
+                # current_power = rec.get_power()
 
-                if "PWR0" in current_power:
+                with open(receiver_path) as json_file:
+                    data = (json.load(json_file))
+
+                current_power = int(data['power'])
+                raw_volume = int(data['raw_vol'])
+                current_volume = int(data['vol'])
+                current_input = data['input']
+
+                if current_power == 1:
                     self.receiver_status.emit(1)
 
                     # Update Volume
                     time.sleep(.5)
-                    current_volume = rec.get_volume()
-                    self.receiver_vol.emit(current_volume[0])
-                    self.current_vol.emit(str(current_volume[1]) + " dB")
+                    self.receiver_vol.emit(raw_volume)
+                    self.current_vol.emit(str(current_volume) + " dB")
 
-                elif "PWR1" in current_power:
+                elif current_power == 0:
                     self.receiver_status.emit(0)
 
             except Exception as e:

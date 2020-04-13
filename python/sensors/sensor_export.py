@@ -17,6 +17,7 @@ import os
 import json
 from calendar import timegm
 from datetime import datetime
+from pprint import pprint
 import atexit
 
 dir_path = '/mnt/tmp/sensor_data'
@@ -26,11 +27,11 @@ logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S')
 time_delay = 30
 
-data = {}
-static_data = {}
-
 # Get Ping on Reset
 ping = internet_ping.main()
+
+data = {}
+static_data = {}
 
 # List of Sensors
 
@@ -161,7 +162,6 @@ def additional_sensors_thread():
     global ping
 
     while True:
-
         ping = internet_ping.main()
         time.sleep(15)
 
@@ -197,7 +197,6 @@ def sensor_export_thread():
     while True:
 
         now = get_current_time()
-
         switchbot_sensor_data = []
         sensors = os.listdir(json_export_path)
 
@@ -220,6 +219,9 @@ def sensor_export_thread():
             hs110_monitor = hs110_power_monitor.sensor_export()
             outside_temp = weatherzone.get_temp()
             new_data = get_data()
+
+            # Debug
+            # pprint(switchbot_sensor_data)
 
             # Update with latest Switch bot Sensor Readings
             for sensor in switchbot_sensor_data:
