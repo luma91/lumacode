@@ -16,8 +16,7 @@ import time
 import os
 import json
 from calendar import timegm
-from datetime import datetime
-from pprint import pprint
+from datetime import datetime, timedelta
 import atexit
 
 dir_path = '/mnt/tmp/sensor_data'
@@ -48,7 +47,7 @@ for x in static_sensors.main():
 
 
 def get_current_time():
-    return int(datetime.now().strftime("%s")) * 1000 
+    return int(datetime.now().strftime("%s"))
 
 
 def convert_to_time_ms(timestamp):
@@ -143,15 +142,16 @@ def convert_to_datapoints(input_data, name, start, end):
 
     new_data = [{"target": name, "datapoints": []}]
 
-    for x in input_data:
+    for item in input_data:
 
         # Check if name matches
-        if name == x:
+        if name == item:
 
             # Check if within range
-            for point in input_data[x]:
-                if lower < point[1] < upper:
-                    new_data[0]["datapoints"].append(point)
+            for point in input_data[item]:
+                new_point = point[0], point[1] * 1000
+                if lower < new_point[1] < upper:
+                    new_data[0]["datapoints"].append(new_point)
 
     return new_data
 
@@ -220,9 +220,6 @@ def sensor_export_thread():
             outside_temp = weatherzone.get_temp()
             new_data = get_data()
 
-            # Debug
-            # pprint(switchbot_sensor_data)
-
             # Update with latest Switch bot Sensor Readings
             for sensor in switchbot_sensor_data:
 
@@ -267,9 +264,18 @@ def save_on_exit():
 
 def write_data(new_data):
 
+    now = datetime.now()
+
     for sensor in sensor_list:
         sensor_path = os.path.join(dir_path, sensor + '.json')
-        export_data = {sensor: new_data[sensor]}
+        sensor_data = new_data[sensor]
+
+        pruned_data = []
+        # for sample in sensor_data:
+        #    if sample[1] > (now - timedelta(days=1)):
+        #        pruned_data.append(sample)
+
+        export_data = {sensor: sensor_data}
 
         print('writing to: %s' % sensor_path)
         with open(sensor_path, 'w+') as json_file:
