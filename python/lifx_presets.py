@@ -41,7 +41,7 @@ def main(preset, zone='media_room'):
             c2.color_fade(hue=300, sat=1, br=.5, ke=5000, duration=duration)
             c3.color_fade(hue=300, sat=1, br=.5, ke=5000, duration=duration)
 
-            color = [.3, .4, 0, 0.5]
+            color = [.4, .5, 0, .6]
 
     elif preset == "blue":
         c.color_fade(hue=200, sat=1, br=.3, ke=5000, duration=duration)
@@ -50,7 +50,7 @@ def main(preset, zone='media_room'):
             c2.color_fade(hue=200, sat=1, br=.5, ke=5000, duration=duration)
             c3.color_fade(hue=200, sat=1, br=.5, ke=5000, duration=duration)
 
-        color = [.18, 0, 0.5, .9]
+        color = [.17, 0, 0.15, 1]
 
     elif preset == "preset_01":
         c.color_fade(hue=200, sat=1, br=.5, ke=5000, duration=duration)

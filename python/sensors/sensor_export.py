@@ -271,11 +271,15 @@ def write_data(new_data):
         sensor_data = new_data[sensor]
 
         pruned_data = []
-        # for sample in sensor_data:
-        #    if sample[1] > (now - timedelta(days=1)):
-        #        pruned_data.append(sample)
 
-        export_data = {sensor: sensor_data}
+        for sample in sensor_data:
+            timestamp = datetime.fromtimestamp(sample[1])
+
+            if timestamp > (now - timedelta(days=7)):
+                pruned_data.append(sample)
+
+        # Add Pruned Data to Export
+        export_data = {sensor: pruned_data}
 
         print('writing to: %s' % sensor_path)
         with open(sensor_path, 'w+') as json_file:
