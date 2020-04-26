@@ -13,16 +13,16 @@ high2 = -14.5
 high1 = 132
 
 
+def remap_to_db(value):
+    return float(low2 + (float(value) - low1) * (high2 - low2) / (high1 - low1))
+
+
 class Main:
 
     @staticmethod
     def start_connection():
         telnet = telnetlib.Telnet(receiver_ip, 23)
         return telnet
-
-    @staticmethod
-    def remap_to_db(value):
-        return float(low2 + (float(value) - low1) * (high2 - low2) / (high1 - low1))
 
     def send_command(self, command):
         telnet = self.start_connection()
@@ -51,7 +51,7 @@ class Main:
     def get_volume(self):
         telnet = self.send_command("?V")
         current_volume = float(telnet.read_until(tn_in).decode('ascii')[3:])
-        output = current_volume, self.remap_to_db(current_volume)
+        output = current_volume, remap_to_db(current_volume)
         telnet.close()
         return output
 

@@ -36,6 +36,21 @@ def address(category, name=None, zone=None):
     return output
 
 
+def get_receiver_inputs():
+
+    output = []
+    smart_devices = read_data()
+
+    for cat in smart_devices:
+        if cat['category'] == 'receiver_inputs':
+            rec_inputs = cat['inputs']
+
+            for item in rec_inputs:
+                output.append(item['name'])
+
+    return output
+
+
 def rec_input(operation, query):
 
     output = None
@@ -70,8 +85,11 @@ if __name__ == "__main__":
     # print(lights)
 
     # Get Inputs
-    x = rec_input(operation="code", query="pc2")
-    print('input code: %s' % x)
+    # x = rec_input(operation="code", query="pc2")
+    # print('input code: %s' % x)
 
-    x = rec_input(operation="name", query="10FN")
-    print('input name: %s' % x)
+    # x = rec_input(operation="name", query="10FN")
+    # print('input name: %s' % x)
+
+    x = get_receiver_inputs()
+    print(x)

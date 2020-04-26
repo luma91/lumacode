@@ -17,12 +17,8 @@ import receiver
 import get_smartdevices
 
 # Load Qt
-if "ubuntu" in platform.platform().lower() or "windows" in platform.platform().lower():
-    from PyQt5 import QtWidgets, uic, QtCore, QtGui
-    server_mode = False
-
-else:
-    server_mode = True
+from PyQt5 import QtWidgets, uic, QtCore, QtGui
+server_mode = False
 
 global window
 global lights_op
@@ -53,21 +49,18 @@ lowdpi_layout_height = 500
 lowdpi_layout_width = 250
 
 # UI Stuff
-if server_mode is False:
-    DEVNULL = open(os.devnull, 'wb')
-    sys.path.append(os.path.dirname(__file__) + "/qt")
-    import resources
-    ui_path = os.path.dirname(__file__)
-    ui_file = 'qt/luma_tools.ui'
-    Ui_MainWindow, QtBaseClass = uic.loadUiType(os.path.join(ui_path, ui_file), resource_suffix='')
+DEVNULL = open(os.devnull, 'wb')
+sys.path.append(os.path.dirname(__file__) + "/qt")
+import resources
+ui_path = os.path.dirname(__file__)
+ui_file = 'qt/luma_tools.ui'
+Ui_MainWindow, QtBaseClass = uic.loadUiType(os.path.join(ui_path, ui_file), resource_suffix='')
 
 # Get Hostname, etc....
 if "Windows" in platform.platform():
     os_version = "Windows"
-
 else:
-    platform_split = platform.platform().split("-")
-    os_version = "%s %s" % (platform_split[6], platform_split[7])
+    os_version = 'Linux'
 
 print("\nHostname: %s" % hostname)
 print("OS: %s" % platform.platform())
@@ -852,7 +845,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
                     if new_volume < 100:
                         new_volume = str("0" + str(new_volume))
 
-                    db = rec.remap_to_db(value=new_volume)
+                    db = receiver.remap_to_db(value=new_volume)
 
                     msg = (">> Setting Vol to: " + str(new_volume)) + " | " + str(db) + " dB"
                     self.current_vol.setText(str(db) + " dB")
@@ -1088,7 +1081,7 @@ class CheckReceiver(QtCore.QObject):
         windows_path = 'T:\\sensor_data\\sensors\\receiver.json'
         receiver_path = '/mnt/tmp/sensor_data/sensors/receiver.json'
 
-        if os_version is 'Windows':
+        if os_version == 'Windows':
             receiver_path = windows_path
 
         while True:
@@ -1196,20 +1189,19 @@ class CheckStatus(QtCore.QObject):
 
 if __name__ == '__main__':
 
-    if server_mode is False:
-        app = QtWidgets.QApplication(sys.argv)
-        screen_resolution = app.desktop().screenGeometry()
-        screen_width, screen_height = screen_resolution.width(), screen_resolution.height()
+    app = QtWidgets.QApplication(sys.argv)
+    screen_resolution = app.desktop().screenGeometry()
+    screen_width, screen_height = screen_resolution.width(), screen_resolution.height()
 
-        if screen_width < 3840:
-            high_dpi = False
-        else:
-            high_dpi = True
+    if screen_width < 3840:
+        high_dpi = False
+    else:
+        high_dpi = True
 
-        print("Resolution: %sx%s" % (screen_width, screen_height))
+    print("Resolution: %sx%s" % (screen_width, screen_height))
 
-        window = LumaTools()
-        window.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
-        window.show()
+    window = LumaTools()
+    window.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+    window.show()
 
-        sys.exit(app.exec_())
+    sys.exit(app.exec_())

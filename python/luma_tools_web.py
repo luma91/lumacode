@@ -1,3 +1,6 @@
+# References
+# https://stackoverflow.com/questions/27090263/how-to-use-ajax-for-auto-refresh-a-div-or-a-web-page
+
 import wifi370
 import lifx
 import lifx_presets
@@ -9,7 +12,8 @@ import pyHS100
 import json
 import time
 import threading
-from bottle import Bottle, run
+from flask import Flask, request
+from werkzeug.exceptions import BadRequest
 
 # Get Smart Devices
 media_room_camera = pyHS100.SmartPlug(get_smartdevices.address(category='smartplugs', name='media_room_camera'))
@@ -23,19 +27,136 @@ computer_data = {}
 # Get Logger
 logger = luma_log.main(__file__)
 
+# Get Inputs
+receiver_inputs = get_smartdevices.get_receiver_inputs()
+
 
 def web_server():
 
-    app = Bottle()
+    app = Flask(__name__)
 
-    @app.route("/", method=['GET', 'OPTIONS'])
+    @app.route("/", methods=["GET", "POST"])
     def index():
 
-        content = '<p>receiver_data: %s</p>' % str(receiver_data)
-        content += '<p>smart_device_data: %s</p>' % str(smart_device_data)
+        path_to_css = 'static/css/luma_tools_web.css?' + str(time.time()).split('.')[0]
+        header = open('static/templates/header.html').read()
+        header = header.replace('$CSS_PATH', path_to_css)
+
+        # Page Body
+        body = '<div class="container">\n'
+
+        body += '<div class="receiver_status">'
+        body += '<span class="item">Receiver Power: <b>%s</b></span>\n' % str(receiver_data['power'])
+        body += '<span class="item">Current Input: <b>%s</b></span>\n' % str(receiver_data['current_input']).upper()
+        body += '</div>'
+        body += '<p>smart_device_data: %s</p>\n' % str(smart_device_data)
+
+        # Receiver Power
+        body += '<span class="rec_field">Receiver Power:</span>'
+        body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'on\')">Power On</button>'
+        body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'off\')">Power Off</button>'
+        body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'mute\', \'toggle\')">Toggle Mute</button>'
+
+        # Receiver Volume
+        body += '<span class="rec_field">Receiver Volume:</span>'
+        body += '<input type="range" onchange="update_vol()" id="vol" name="vol" min="45" max="120" ' \
+                'value="' + str(receiver_data['raw_volume']) + '">'
+        body += '<span id="current_vol">' + str(receiver_data['current_volume']) + 'db</span>'
+
+        # body += '<button class="button" type="button" onclick="var vol=document.getElementById(\'vol\').value; ' \
+        #         ' send_command(\'receiver\', \'volume\', vol)">Change Volume</button>'
+
+        # Receiver Input
+        body += '<form id="rec_input">\n'
+        body += '<span class="rec_field">Receiver Input:</span> <select name="receiver_input" type="text">\n'
+
+        # Add Receiver Inputs
+        for rec_input in receiver_inputs:
+            if receiver_data['current_input'] == rec_input:
+                body += '<option value="' + rec_input + '" selected="selected">' + rec_input + '</option>'
+            else:
+                body += '<option value="' + rec_input + '">' + rec_input + '</option>'
+
+        body += '</select>\n'
+
+        body += '<input class="button" id="submit" type="submit" value="Change Input"></input>\n'
+        body += '</form>\n'
+
+        body += "</div>\n"
+
+        # Add Footer and Compile the Page
+        footer = open('static/templates/footer.html').read()
+        content = header + body + footer
+
         return content
 
-    run(app=app, host='0.0.0.0', port=8081)
+    @app.route("/ops", methods=["POST"])
+    def ops():
+
+        if request.method == "POST":
+
+            # Receiver
+            receiver_input = request.form.get('receiver_input')
+            data = request.get_json()
+
+            if receiver_input:
+
+                try:
+                    rec = receiver.Main()
+                    if receiver_input != receiver_data['current_input']:
+                        rec.set_input(value=receiver_input)
+
+                except Exception as e:
+                    return 'Error: %s' % e
+
+            if data:
+                if data['device'] == 'receiver':
+
+                    command = data['command']
+
+                    try:
+                        rec = receiver.Main()
+
+                        if data['operation'] == 'power':
+
+                            if command == 'on':
+                                rec.power_on()
+
+                            elif command == 'off':
+                                rec.power_off()
+
+                        if data['operation'] == 'mute':
+                            rec.mute()
+
+                        if data['operation'] == 'volume':
+                            rec.set_volume(command.zfill(3))
+
+                    except Exception as e:
+                        return 'Error: %s' % e, 500
+
+        # Go Back Home
+        return 'OK', 200
+
+    @app.route("/query", methods=["POST"])
+    def query():
+
+        result = None
+        if request.method == "POST":
+            data = request.get_json()
+
+            if data['device'] == 'receiver':
+                if data['item'] == 'current_vol':
+                    result = str(receiver_data['current_volume'])
+
+                if data['item'] == 'convert_vol':
+                    result = str(receiver.remap_to_db(data['value']))
+
+        return result
+
+    # Run the Server
+    app.run(host='0.0.0.0', port=8080)
+
+    # -------------------------
 
 
 def check_receiver():
@@ -46,7 +167,6 @@ def check_receiver():
     while True:
 
         try:
-
             with open(receiver_path) as json_file:
                 data = (json.load(json_file))
 
@@ -57,7 +177,7 @@ def check_receiver():
                 power = "ON"
 
             raw_volume = int(data['raw_vol'])
-            current_volume = str(data['vol']) + ' dB'
+            current_volume = str(data['vol'])
             current_input = data['input']
 
             receiver_data = {
