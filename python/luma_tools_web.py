@@ -44,31 +44,43 @@ def web_server():
 
         # Page Body
         body = '<div class="container">\n'
+        body += '<div class="header"><span class="highlight">Luma Tools: </span>Web</div>\n'
 
-        body += '<div class="receiver_status">'
-        body += '<span class="item">Receiver Power: <b>%s</b></span>\n' % str(receiver_data['power'])
-        body += '<span class="item">Current Input: <b>%s</b></span>\n' % str(receiver_data['current_input']).upper()
+        body += '<div class="content">\n'
+
+        body += '<div class="status_grp">'
+        body += '<span class="item">Receiver Power: <span style="font-weight: bold;" id="rec_power">%s</span></span>\n' % str(receiver_data['power'])
+        body += '<span class="item">Current Input: <span style="font-weight: bold;" id="rec_input">%s</span></span>\n' % str(receiver_data['current_input']).upper()
         body += '</div>'
-        body += '<p>smart_device_data: %s</p>\n' % str(smart_device_data)
+
+        # Lifx
+        body += '<div class="lifx_grp">\n'
+        body += '<span class="label_text">LIFX Power:</span>'
+        body += '<button class="button" type="button" onclick="send_command(\'lifx\', \'power\', \'on\')">Power On</button>'
+        body += '<button class="button" type="button" onclick="send_command(\'lifx\', \'power\', \'off\')">Power Off</button>'
+        body += '</div>'
 
         # Receiver Power
-        body += '<span class="rec_field">Receiver Power:</span>'
+        body += '<div class="receiver_grp">'
+        body += '<span class="label_text">Receiver Power:</span>'
         body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'on\')">Power On</button>'
         body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'off\')">Power Off</button>'
         body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'mute\', \'toggle\')">Toggle Mute</button>'
 
         # Receiver Volume
-        body += '<span class="rec_field">Receiver Volume:</span>'
+        body += '<div class="rec_vol">'
+        body += '<span class="label_text">Receiver Volume:</span>'
         body += '<input type="range" onchange="update_vol()" id="vol" name="vol" min="45" max="120" ' \
                 'value="' + str(receiver_data['raw_volume']) + '">'
         body += '<span id="current_vol">' + str(receiver_data['current_volume']) + 'db</span>'
+        body += '</div>'
 
         # body += '<button class="button" type="button" onclick="var vol=document.getElementById(\'vol\').value; ' \
         #         ' send_command(\'receiver\', \'volume\', vol)">Change Volume</button>'
 
         # Receiver Input
         body += '<form id="rec_input">\n'
-        body += '<span class="rec_field">Receiver Input:</span> <select name="receiver_input" type="text">\n'
+        body += '<span class="label_text">Receiver Input:</span> <select name="receiver_input" type="text">\n'
 
         # Add Receiver Inputs
         for rec_input in receiver_inputs:
@@ -82,7 +94,10 @@ def web_server():
         body += '<input class="button" id="submit" type="submit" value="Change Input"></input>\n'
         body += '</form>\n'
 
-        body += "</div>\n"
+        body += '</div>\n'
+        body += '</div>\n'
+
+        body += '</div>\n'
 
         # Add Footer and Compile the Page
         footer = open('static/templates/footer.html').read()

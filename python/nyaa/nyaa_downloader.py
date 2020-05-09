@@ -28,7 +28,7 @@ def main():
 
     nas_mode = 0
 
-    if "ubuntu" in platform_os.lower():
+    if any(x for x in ["ubuntu", "linux-5.4.0"] if x in platform_os.lower()):
         from PyQt5 import QtWidgets, uic, QtCore
         plex_directory = "/mnt/Media/Anime"
         directory = base_directory
@@ -94,7 +94,7 @@ def main():
         return parsed_shows_list
 
     # Main UI Code (Front End)
-    if nas_mode is 0:
+    if nas_mode == 0:
 
         import resources
         ui_path = os.path.dirname(__file__)
