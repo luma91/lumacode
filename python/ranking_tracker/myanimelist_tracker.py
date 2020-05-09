@@ -145,8 +145,8 @@ def process_data():
         write_data(new_data)
 
         # Standard Wait Period before collecting new results.
-        # 1 Day
-        time.sleep(86400)
+        # 12 Hours
+        time.sleep(43200)
 
 
 def main():
