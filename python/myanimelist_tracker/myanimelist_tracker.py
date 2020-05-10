@@ -6,12 +6,10 @@ import json
 import os
 import time
 import threading
-from datetime import datetime
+import config
+from uuid import uuid4
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-
-# Base URL
-url = 'http://myanimelist.net/anime/season'
-database = '/mnt/Dropbox/ranking_tracker.json'
 
 
 def gather_ratings():
@@ -25,20 +23,23 @@ def gather_ratings():
     print('gathering data from web.')
 
     output = []
-    request = urllib.request.Request(url)
+    request = urllib.request.Request(config.myanimelist_url)
     response = urllib.request.urlopen(request)
     soup = BeautifulSoup(response, 'html.parser')
     elements = soup.find_all('div', attrs={'class': 'seasonal-anime js-seasonal-anime'})
 
     for item in elements:
+        title = item.find('a', attrs={'class': 'link-title'}).text.strip()
+        url = item.find('a', attrs={'class': 'link-title'})['href']
         rating = item.find('span', attrs={'title': 'Score'}).text.strip()
         popularity = item.find('span', attrs={'title': 'Members'}).text.strip().replace(',', '')
 
+        # Ignore shows with a non applicable rating.
         if 'N/A' not in rating:
-            show_data = {'title': item.find('a', attrs={'class': 'link-title'}).text.strip(),
-                         'rating': float(rating),
-                         'popularity': int(popularity),
-                         'url': item.find('a', attrs={'class': 'link-title'})['href']}
+            show_data = {'title': title,
+                         'url': url,
+                         'rank': float(rating),
+                         'popularity': int(popularity)}
 
             output.append(show_data)
 
@@ -65,26 +66,37 @@ def read_data():
 
     """
 
-    if os.path.exists(database):
+    if os.path.exists(config.data_directory):
 
         print('reading from disk.')
-        with open(database, 'r') as json_file:
-            data = json.load(json_file)
 
-        return data
+        data = {}
+        files = os.listdir(config.data_directory)
+
+        for f in files:
+            show_path = os.path.join(config.data_directory, f)
+            with open(show_path, 'r') as json_file:
+                data.update({f: json.load(json_file)})
+
+        if data:
+            return data
 
 
 def write_data(input_data):
 
-    # Will append a timestamp to the input_data
-
-    # Will attempt to collect old data
-    result_data = input_data
-
     # If there is data already on disk, we will append the new results with a timestamp as a sample.
     print('writing to disk.')
-    with open(database, 'w+') as json_file:
-        json.dump(result_data, json_file, indent=1)
+
+    for show in input_data:
+
+        file_name = show['file_name']
+        data = show['data']
+        show_path = os.path.join(config.data_directory, file_name)
+
+        with open(show_path, 'w+') as json_file:
+            json.dump(data, json_file, indent=1)
+
+    print('done.')
 
 
 def convert_to_samples(input_data):
@@ -99,32 +111,39 @@ def convert_to_samples(input_data):
     data_from_disk = read_data()
     output_data = []
 
-    # File not on disk, will not append.
-
     for show in input_data:
 
-        rating = show['r']
-        popularity = show['p']
+        # Make a simple unique name for each JSON file that will
+        # be stored in the data directory.
+        file_title = show['title'].split(' ')[0]
+        uid = str(uuid4()).split('-')[0]
+        file_name = file_title + '_' + uid + '.json'
 
         # Create a sample
-        sample_data = [{'r': rating, 'p': popularity}, timestamp]
-        new_data = {
+        sample_data = [{'rank': show['rank'], 'popularity': show['popularity']}, timestamp]
+        new_data = {'file_name': file_name, 'data': {
             'title': show['title'],
             'url': show['url'],
             'datapoints': sample_data
-        }
+        }}
 
         if data_from_disk:
+
             for x in data_from_disk:
-                if x['title'] == show['title']:
-                    datapoints = x['datapoints']
+
+                file_name = x
+                file_data = data_from_disk[x]
+
+                # If show exists
+                if file_data['title'] == show['title']:
+                    datapoints = file_data['datapoints']
                     datapoints.append(sample_data)
 
-                    new_data = {
+                    new_data = {'file_name': file_name, 'data': {
                         'title': show['title'],
                         'url': show['url'],
                         'datapoints': datapoints
-                    }
+                    }}
 
         output_data.append(new_data)
 
@@ -140,13 +159,19 @@ def process_data():
     """
 
     while True:
+
+        # Collect the latest ratings
         data = gather_ratings()
+
+        # Process the data and append to old data
         new_data = convert_to_samples(data)
+
+        # Write the new data to disk
         write_data(new_data)
 
-        # Standard Wait Period before collecting new results.
-        # 12 Hours
-        time.sleep(43200)
+        # Timeout until next cycle
+        sleep_duration = timedelta(hours=24).total_seconds()
+        time.sleep(sleep_duration)
 
 
 def main():
