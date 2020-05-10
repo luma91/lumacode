@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import json
 import myanimelist_tracker
 from flask import Flask, request
 
@@ -18,7 +19,10 @@ def web_server():
     This is the flask server app.
     This will display the contents of the data for the rating tracker.
 
-    Chart.js examples: https://www.chartjs.org/samples/latest/
+    Chart.js examples:
+    https://www.chartjs.org/samples/latest/
+    https://www.chartjs.org/docs/latest/charts/line.html
+    https://tobiasahlin.com/blog/chartjs-charts-to-get-you-started
 
     """
 
@@ -31,8 +35,21 @@ def web_server():
         current_time = str(int(time.time()))
         path_to_css = 'static/css/stylesheet.css?' + current_time
         page_template = open('static/templates/index.html').read()
-        line_graph = open('static/templates/charts/line_graph.html').read()
+        line_graph_template = open('static/templates/charts/line_graph.html').read()
         page = page_template
+
+        # Define Graph Contents Here
+        graph_labels = ['test']
+        graph_data = {
+            'data': [86, 114, 106, 106, 107, 111, 133, 221, 783, 2478],
+            'label': "Africa",
+            'borderColor': "#3e95cd",
+            'fill': False
+        }
+
+        line_graph = line_graph_template.replace('${GRAPH_DATA}', json.dumps(graph_data))
+        line_graph = line_graph.replace('${GRAPH_LABELS}', json.dumps(graph_labels))
+        line_graph = line_graph.replace('${GRAPH_TITLE}', 'Ranking')
 
         # Define Content Here
         page_title = 'MyAnimeList.net - Ranking Tracker'
@@ -64,7 +81,6 @@ def tracker_thread():
 
 
 if __name__ == "__main__":
-
     t = threading.Thread(target=tracker_thread)
     t.start()
     web_server()
