@@ -2,7 +2,7 @@ import os
 import time
 import threading
 import myanimelist_tracker
-from flask import Flask, request, url_for
+from flask import Flask, request
 
 # For storing the data recorded by the tracker in memory
 data = []
@@ -18,6 +18,8 @@ def web_server():
     This is the flask server app.
     This will display the contents of the data for the rating tracker.
 
+    Chart.js examples: https://www.chartjs.org/samples/latest/
+
     """
 
     global data
@@ -29,11 +31,12 @@ def web_server():
         current_time = str(int(time.time()))
         path_to_css = 'static/css/stylesheet.css?' + current_time
         page_template = open('static/templates/index.html').read()
+        line_graph = open('static/templates/charts/line_graph.html').read()
         page = page_template
 
         # Define Content Here
-        page_title = 'Myanimelist Tracker'
-        content = 'test content'
+        page_title = 'MyAnimeList.net - Ranking Tracker'
+        content = line_graph
 
         # Compile the page
         page = page.replace('${STYLESHEET_PATH}', path_to_css)
