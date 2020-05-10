@@ -2,10 +2,14 @@ import os
 import time
 import threading
 import myanimelist_tracker
-from flask import Flask, request
+from flask import Flask, request, url_for
 
 # For storing the data recorded by the tracker in memory
 data = []
+
+# Make sure working directory is the same as the script directory.
+abspath = os.path.dirname(os.path.abspath(__file__))
+os.chdir(abspath)
 
 
 def web_server():
@@ -24,11 +28,18 @@ def web_server():
 
         current_time = str(int(time.time()))
         path_to_css = 'static/css/stylesheet.css?' + current_time
-        # header = open('templates/header.html').read()
-        # footer = open('templates/footer.html').read()
-        # header = header.replace('$CSS_PATH', path_to_css)
+        page_template = open('static/templates/index.html').read()
+        page = page_template
 
-        return str(data)
+        # Define Content Here
+        page_title = 'Myanimelist Tracker'
+        content = 'test content'
+
+        # Compile the page
+        page = page.replace('${STYLESHEET_PATH}', path_to_css)
+        page = page.replace('${PAGE_CONTENT}', content)
+        page = page.replace('${PAGE_TITLE}', page_title)
+        return page
 
     # Run App
     app.run(host='0.0.0.0', port=8080)
