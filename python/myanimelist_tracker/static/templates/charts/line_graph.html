@@ -2,19 +2,25 @@
 <script>
 
   new Chart(document.getElementById("${CHART_ID}"), {
-  type: 'line',
-  data: {
-    labels: ${GRAPH_LABELS},
-    datasets: [
-        ${GRAPH_DATA}
-    ]
-  },
-  options: {
-    title: {
-      display: true,
-      text: '${GRAPH_TITLE}'
-    }
-  }
+      type: 'line',
+      data: {
+        datasets: [
+            ${GRAPH_DATA}
+        ]
+      },
+      options: {
+        title: {
+          display: true,
+          text: '${GRAPH_TITLE}'
+        },
+
+            scales: {
+            xAxes: [{
+                type: "time",
+                time: {parser: 'dd/mm/yyyy h:m:s'}
+                }],
+        }
+      }
 });
 
 </script>

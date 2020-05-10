@@ -74,9 +74,11 @@ def read_data():
         files = os.listdir(config.data_directory)
 
         for f in files:
-            show_path = os.path.join(config.data_directory, f)
-            with open(show_path, 'r') as json_file:
-                data.update({f: json.load(json_file)})
+
+            if f.startswith('.') is False:
+                show_path = os.path.join(config.data_directory, f)
+                with open(show_path, 'r') as json_file:
+                    data.update({f: json.load(json_file)})
 
         if data:
             return data
@@ -124,7 +126,7 @@ def convert_to_samples(input_data):
         new_data = {'file_name': file_name, 'data': {
             'title': show['title'],
             'url': show['url'],
-            'datapoints': sample_data
+            'datapoints': [sample_data]
         }}
 
         if data_from_disk:

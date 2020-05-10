@@ -1,16 +1,31 @@
 import os
 import time
 import threading
-import json
+import random
 import myanimelist_tracker
+from datetime import datetime, timedelta
 from flask import Flask, request
-
-# For storing the data recorded by the tracker in memory
-data = []
 
 # Make sure working directory is the same as the script directory.
 abspath = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abspath)
+
+
+def make_color():
+    color_value = random.randint(0, 255)
+    return color_value
+
+
+def convert_timestamp(timestamp):
+
+    """
+    Converts a Timestamp into a readable Date.
+
+    """
+
+    dt_object = datetime.fromtimestamp(timestamp)
+    output = datetime.strftime(dt_object, '%d/%m/%y %H:%M:%S')
+    return output
 
 
 def web_server():
@@ -23,32 +38,49 @@ def web_server():
     https://www.chartjs.org/samples/latest/
     https://www.chartjs.org/docs/latest/charts/line.html
     https://tobiasahlin.com/blog/chartjs-charts-to-get-you-started
+    https://stackoverflow.com/questions/46626871/chart-js-use-time-for-xaxes/46659594
+    https://embed.plnkr.co/JOI1fpgWIS0lvTeLUxUp/
 
     """
-
-    global data
     app = Flask(__name__)
 
     @app.route("/", methods=['GET'])
     def home():
 
+        data = myanimelist_tracker.read_data()
         current_time = str(int(time.time()))
         path_to_css = 'static/css/stylesheet.css?' + current_time
         page_template = open('static/templates/index.html').read()
         line_graph_template = open('static/templates/charts/line_graph.html').read()
         page = page_template
+        show_data = []
 
-        # Define Graph Contents Here
-        graph_labels = ['test']
-        graph_data = {
-            'data': [86, 114, 106, 106, 107, 111, 133, 221, 783, 2478],
-            'label': "Africa",
-            'borderColor': "#3e95cd",
-            'fill': False
-        }
+        num = 0
 
-        line_graph = line_graph_template.replace('${GRAPH_DATA}', json.dumps(graph_data))
-        line_graph = line_graph.replace('${GRAPH_LABELS}', json.dumps(graph_labels))
+        if data:
+            for show in data:
+
+                if num <= 15:
+
+                    color = '%02X%02X%02X' % (make_color(), make_color(), make_color())
+                    title = data[show]['title']
+                    datapoints = data[show]['datapoints']
+                    rank_samples = []
+                    rank_samples_formatted = ''
+
+                    for sample in datapoints:
+
+                        sample_time = convert_timestamp(sample[1])
+                        sample_data = sample[0]['rank']
+                        rank_samples.append('{x: "' + sample_time + '", y: ' + str(sample_data) + '}')
+                        rank_samples_formatted = ', '.join(rank_samples)
+
+                    show_data.append('{ label: "' + title + '", data: [' + rank_samples_formatted + '], borderColor: "#' + color + '", fill: false }')
+                    num += 1
+
+        graph_data = ', '.join(show_data)
+
+        line_graph = line_graph_template.replace('${GRAPH_DATA}', graph_data)
         line_graph = line_graph.replace('${GRAPH_TITLE}', 'Ranking')
 
         # Define Content Here
@@ -59,28 +91,12 @@ def web_server():
         page = page.replace('${STYLESHEET_PATH}', path_to_css)
         page = page.replace('${PAGE_CONTENT}', content)
         page = page.replace('${PAGE_TITLE}', page_title)
+
         return page
 
     # Run App
     app.run(host='0.0.0.0', port=8080)
 
 
-def tracker_thread():
-
-    """
-    A simple loop for reading the data off disk and storing into a global var "data".
-    This will run on an interval and refresh every 240 seconds.
-
-    """
-
-    global data
-
-    while True:
-        data = myanimelist_tracker.read_data()
-        time.sleep(240)
-
-
 if __name__ == "__main__":
-    t = threading.Thread(target=tracker_thread)
-    t.start()
     web_server()
