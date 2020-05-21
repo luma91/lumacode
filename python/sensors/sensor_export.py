@@ -27,7 +27,8 @@ logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(m
 time_delay = 30
 
 # Get Ping on Reset
-ping = internet_ping.main()
+ping = internet_ping.get_ping()
+net_alive = internet_ping.get_alive()
 
 data = {}
 static_data = {}
@@ -37,7 +38,7 @@ static_data = {}
 sensor_list = [
     'media_room_temperature', 'media_room_humidity',
     'bed_room_temperature', 'bed_room_humidity', 'Pi_Cpu_temp',
-    'hs110_volts', 'hs110_watts', 'outside_temp', 'ping'
+    'hs110_volts', 'hs110_watts', 'outside_temp', 'ping', 'net_alive'
 ]
 
 # Get Static Sensors
@@ -160,9 +161,12 @@ def convert_to_datapoints(input_data, name, start, end):
 def additional_sensors_thread():
 
     global ping
+    global net_alive
 
     while True:
-        ping = internet_ping.main()
+        ping = internet_ping.get_ping()
+        net_alive = internet_ping.get_alive()
+
         time.sleep(15)
 
 
@@ -191,6 +195,7 @@ def sensor_export_thread():
 
     global data
     global ping
+    global net_alive
     logging.info("Initializing Sensor Export Thread")
 
     # Infinite Loop
@@ -239,6 +244,7 @@ def sensor_export_thread():
             new_data['hs110_watts'].append([hs110_monitor[1], now])
             new_data['outside_temp'].append([outside_temp, now])
             new_data['ping'].append([ping, now])
+            new_data['net_alive'].append([net_alive, now])
 
             # Write Data to Disk
             write_data(new_data)

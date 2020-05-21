@@ -13,7 +13,6 @@ import json
 import time
 import threading
 from flask import Flask, request
-from werkzeug.exceptions import BadRequest
 
 # Get Smart Devices
 media_room_camera = pyHS100.SmartPlug(get_smartdevices.address(category='smartplugs', name='media_room_camera'))
@@ -39,71 +38,61 @@ def web_server():
     def index():
 
         path_to_css = 'static/css/luma_tools_web.css?' + str(time.time()).split('.')[0]
-        header = open('static/templates/header.html').read()
-        header = header.replace('$CSS_PATH', path_to_css)
+        page_template = open('static/templates/index.html').read()
+        page = page_template
 
         # Page Body
-        body = '<div class="container">\n'
-        body += '<div class="header"><span class="highlight">Luma Tools: </span>Web</div>\n'
+        content = '<div class="content">\n'
 
-        body += '<div class="content">\n'
+        content += '<div class="status_grp">'
+        content += '<span class="item">Receiver Power: <span style="font-weight: bold;" id="rec_power">%s</span></span>\n' % str(receiver_data['power'])
+        content += '<span class="item">Current Input: <span style="font-weight: bold;" id="rec_input">%s</span></span>\n' % str(receiver_data['current_input']).upper()
+        content += '</div>'
 
-        body += '<div class="status_grp">'
-        body += '<span class="item">Receiver Power: <span style="font-weight: bold;" id="rec_power">%s</span></span>\n' % str(receiver_data['power'])
-        body += '<span class="item">Current Input: <span style="font-weight: bold;" id="rec_input">%s</span></span>\n' % str(receiver_data['current_input']).upper()
-        body += '</div>'
-
-        # Lifx
-        body += '<div class="lifx_grp">\n'
-        body += '<span class="label_text">LIFX Power:</span>'
-        body += '<button class="button" type="button" onclick="send_command(\'lifx\', \'power\', \'on\')">Power On</button>'
-        body += '<button class="button" type="button" onclick="send_command(\'lifx\', \'power\', \'off\')">Power Off</button>'
-        body += '</div>'
+        # LIFX
+        content += '<div class="lifx_grp">\n'
+        content += '<span class="label_text">LIFX Power:</span>'
+        content += '<button class="button" type="button" onclick="send_command(\'lifx\', \'power\', \'on\')">Power On</button>'
+        content += '<button class="button" type="button" onclick="send_command(\'lifx\', \'power\', \'off\')">Power Off</button>'
+        content += '</div>'
 
         # Receiver Power
-        body += '<div class="receiver_grp">'
-        body += '<span class="label_text">Receiver Power:</span>'
-        body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'on\')">Power On</button>'
-        body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'off\')">Power Off</button>'
-        body += '<button class="button" type="button" onclick="send_command(\'receiver\', \'mute\', \'toggle\')">Toggle Mute</button>'
+        content += '<div class="receiver_grp">'
+        content += '<span class="label_text">Receiver Power:</span>'
+        content += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'on\')">Power On</button>'
+        content += '<button class="button" type="button" onclick="send_command(\'receiver\', \'power\', \'off\')">Power Off</button>'
+        content += '<button class="button" type="button" onclick="send_command(\'receiver\', \'mute\', \'toggle\')">Toggle Mute</button>'
 
         # Receiver Volume
-        body += '<div class="rec_vol">'
-        body += '<span class="label_text">Receiver Volume:</span>'
-        body += '<input type="range" onchange="update_vol()" id="vol" name="vol" min="45" max="120" ' \
+        content += '<div class="rec_vol">'
+        content += '<span class="label_text">Receiver Volume:</span>'
+        content += '<input type="range" onchange="update_vol()" id="vol" name="vol" min="45" max="120" ' \
                 'value="' + str(receiver_data['raw_volume']) + '">'
-        body += '<span id="current_vol">' + str(receiver_data['current_volume']) + 'db</span>'
-        body += '</div>'
-
-        # body += '<button class="button" type="button" onclick="var vol=document.getElementById(\'vol\').value; ' \
-        #         ' send_command(\'receiver\', \'volume\', vol)">Change Volume</button>'
+        content += '<span id="current_vol">' + str(receiver_data['current_volume']) + 'db</span>'
+        content += '</div>'
 
         # Receiver Input
-        body += '<form id="rec_input">\n'
-        body += '<span class="label_text">Receiver Input:</span> <select name="receiver_input" type="text">\n'
+        content += '<form id="rec_input_form">\n'
+        content += '<span class="label_text">Receiver Input:</span> <select name="receiver_input" type="text">\n'
 
-        # Add Receiver Inputs
         for rec_input in receiver_inputs:
             if receiver_data['current_input'] == rec_input:
-                body += '<option value="' + rec_input + '" selected="selected">' + rec_input + '</option>'
+                content += '<option value="' + rec_input + '" selected="selected">' + rec_input + '</option>'
             else:
-                body += '<option value="' + rec_input + '">' + rec_input + '</option>'
+                content += '<option value="' + rec_input + '">' + rec_input + '</option>'
 
-        body += '</select>\n'
+        content += '</select>\n'
+        content += '<input class="button" id="submit" type="submit" value="Change Input"></input>\n'
+        content += '</form>\n'
 
-        body += '<input class="button" id="submit" type="submit" value="Change Input"></input>\n'
-        body += '</form>\n'
+        content += '</div>\n'
 
-        body += '</div>\n'
-        body += '</div>\n'
+        content += '</div>\n'
 
-        body += '</div>\n'
-
-        # Add Footer and Compile the Page
-        footer = open('static/templates/footer.html').read()
-        content = header + body + footer
-
-        return content
+        # Compile the page
+        page = page.replace('${STYLESHEET_PATH}', path_to_css)
+        page = page.replace('${PAGE_CONTENT}', content)
+        return page
 
     @app.route("/ops", methods=["POST"])
     def ops():
@@ -118,8 +107,7 @@ def web_server():
 
                 try:
                     rec = receiver.Main()
-                    if receiver_input != receiver_data['current_input']:
-                        rec.set_input(value=receiver_input)
+                    rec.set_input(value=receiver_input)
 
                 except Exception as e:
                     return 'Error: %s' % e
@@ -132,6 +120,7 @@ def web_server():
                     try:
                         rec = receiver.Main()
 
+                        # Set Receiver Power
                         if data['operation'] == 'power':
 
                             if command == 'on':
@@ -170,7 +159,6 @@ def web_server():
 
     # Run the Server
     app.run(host='0.0.0.0', port=8080)
-
     # -------------------------
 
 
@@ -217,7 +205,6 @@ def check_smart_devices():
     while True:
 
         try:
-
             lifx_conn_mr = lifx.Connection(get_smartdevices.address(category='lifx', zone='media_room'))
             lifx_power_mr = 'OFF'
 

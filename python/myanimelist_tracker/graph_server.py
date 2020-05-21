@@ -1,18 +1,19 @@
 import os
 import time
-import threading
 import random
 import myanimelist_tracker
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from flask import Flask, request
 
 # Make sure working directory is the same as the script directory.
 abspath = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abspath)
+print(abspath)
 
 
 def make_color():
-    color_value = random.randint(0, 255)
+    color_value = random.randint(25, 200)
     return color_value
 
 
@@ -53,14 +54,30 @@ def web_server():
         page_template = open('static/templates/index.html').read()
         line_graph_template = open('static/templates/charts/line_graph.html').read()
         page = page_template
-        show_data = []
 
-        num = 0
+        # Define and Set Result Limit
+        result_limit = request.args.get('limit')
+
+        if result_limit:
+
+            result_limit = int(result_limit)
+
+        else:
+            result_limit = 10
+
+        show_data = []
+        num = 1
 
         if data:
-            for show in data:
 
-                if num <= 15:
+            # Sort by Ranking (Of last entry)
+            sorted_data = OrderedDict(
+                sorted(data.items(), key=lambda x: x[1]['datapoints'][-1][0]['rank'], reverse=True)
+            )
+
+            for show in sorted_data:
+
+                if num <= result_limit:
 
                     color = '%02X%02X%02X' % (make_color(), make_color(), make_color())
                     title = data[show]['title']
@@ -95,7 +112,7 @@ def web_server():
         return page
 
     # Run App
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=80)
 
 
 if __name__ == "__main__":

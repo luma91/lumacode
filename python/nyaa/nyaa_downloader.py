@@ -12,38 +12,37 @@ sys.path.append(os.path.join(base_path, '..'))
 
 website = "https://nyaa.si/?page=rss"
 base_directory = "/mnt/ds918-Media/.temp"
-base_directory_windows = "Q:/.temp"
 base_directory_nas = "/volume1/Media/.temp"
+base_directory_windows = "Q:/.temp"
 flags = "&c=1_2&f=0"  # These do something, I'm totally sure of it...
 video_quality = "1080p"
 ignore_flags = ["mini", "batch", "batched", "NoobSubs", "Where", "Hardsub", "60FPS"]  # Keywords to ignore
 download_list = []
 
 
-def main():
+def main(mode='gui'):
 
     # Get Logger
     import luma_log
     logger = luma_log.main(__file__)
+    directory = base_directory
 
-    nas_mode = 0
+    if mode == 'gui':
 
-    if any(x for x in ["ubuntu", "linux-5.4.0"] if x in platform_os.lower()):
-        from PyQt5 import QtWidgets, uic, QtCore
-        plex_directory = "/mnt/Media/Anime"
-        directory = base_directory
+        # Windows
+        if "windows" in platform_os.lower():
+            from PyQt5 import QtWidgets, uic, QtCore
+            plex_directory = "M:/Anime"
+            directory = base_directory_windows
 
-    # Windows
-    elif "windows" in platform_os.lower():
-        from PyQt5 import QtWidgets, uic, QtCore
-        plex_directory = "M:/Anime"
-        directory = base_directory_windows
+        else:
+            from PyQt5 import QtWidgets, uic, QtCore
+            plex_directory = "/mnt/Media/Anime"
 
     # Synology
-    else:
-        plex_directory = "/volume1/Media/Anime"
-        directory = base_directory_nas
-        nas_mode = 1
+    # elif mode == 'nas':
+    #    plex_directory = "/volume1/Media/Anime"
+    #    directory = base_directory_nas
 
     show_database = os.path.join(directory, "show_database.json")
     torrent_dir = os.path.join(directory, "transmission/watch")
@@ -94,7 +93,7 @@ def main():
         return parsed_shows_list
 
     # Main UI Code (Front End)
-    if nas_mode == 0:
+    if mode == 'gui':
 
         import resources
         ui_path = os.path.dirname(__file__)
@@ -436,11 +435,8 @@ def main():
 
         NyaaDownloaderNas()
 
-        # import plex_sync
-        # download_dir = os.path.join(directory, "transmission/completed")
-        # plex_sync.run_sync(plex_directory, download_dir)
-
 
 # Run the program
-main()
+if __name__ == "__main__":
+    main('gui')
 

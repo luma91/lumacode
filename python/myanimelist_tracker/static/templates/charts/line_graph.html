@@ -9,17 +9,20 @@
         ]
       },
       options: {
-        title: {
-          display: true,
-          text: '${GRAPH_TITLE}'
-        },
+            title: {
+              display: true,
+              text: '${GRAPH_TITLE}'
+            },
 
             scales: {
-            xAxes: [{
-                type: "time",
-                time: {parser: 'dd/mm/yyyy h:m:s'}
+                xAxes: [{
+                    type: "time",
+                    time: {
+                        parser: 'DD/MM/YYYY HH:mm',
+                        unit: 'day'
+                    }
                 }],
-        }
+            }
       }
 });
 

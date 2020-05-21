@@ -1,4 +1,6 @@
 # Define the global paths here
+import os
 
 myanimelist_url = 'http://myanimelist.net/anime/season'
-data_directory = '/mnt/Dropbox/lumacode/python/myanimelist_tracker/data'
+abspath = os.path.dirname(os.path.abspath(__file__))
+data_directory = os.path.join(abspath, 'data')

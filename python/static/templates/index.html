@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="$CSS_PATH">
+    <link rel="stylesheet" type="text/css" href="${STYLESHEET_PATH}">
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script>
-
-    // Receiver Input Form
     $(function () {
-        $("#rec_input").on("submit", function (e) {
+        $("#rec_input_form").on("submit", function (e) {
             e.preventDefault();
             $.ajax({
                 type: "post",
@@ -21,6 +19,8 @@
             });
         });
     });
+    </script>
+    <script>
 
     // Send JSON Data
     function send_JSON(data_to_send) {
@@ -47,7 +47,6 @@
            };
 
            send_JSON(data_to_send);
-
     };
 
     // Query a Device's Values
@@ -76,7 +75,7 @@
     // Update Result
     function updateResult(response) {
         document.getElementById("current_vol").textContent=response + " db";
-    }
+    };
 
     // Update Volume
     function update_vol() {
@@ -97,4 +96,17 @@
 </head>
 
 <body>
+
+<div class="container">
+
+    <div class="header">
+        <span class="highlight">Luma Tools: </span>Web
+    </div>
+
+    ${PAGE_CONTENT}
+
+</div>
+
+</body>
+</html>
 

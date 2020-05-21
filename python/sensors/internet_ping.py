@@ -3,7 +3,30 @@
 import subprocess
 
 
-def main():
+def get_alive():
+
+    connected = 0
+    cmd = ['ping', 'google.com', '-q', '-c 1']
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+    output = proc.stdout.split('\n')
+
+    for line in output:
+
+        # Ping was successful
+        if '0% packet loss' in line:
+            return 1
+
+        # DNS Failed
+        elif 'Temporary failure in name resolution' in line:
+            return 0
+
+        else:
+            continue
+
+    return connected
+
+
+def get_ping():
 
     data = []
     data_average = 0
@@ -28,7 +51,6 @@ def main():
                 result = (server, line, average)
                 data.append(result)
                 data_average += average
-                # print(result)
 
     data_average = float('%.2f' % (data_average / len(servers)))
     print('average: %s ms' % data_average)
@@ -37,4 +59,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    a = get_ping()
+    print(a)
