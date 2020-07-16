@@ -88,9 +88,9 @@ def main():
     receiver_stats = get_receiver_state()
 
     # Get Smart Devices
-    subwoofer = get_smartplug_state('subwoofer')
-    media_room_camera = get_smartplug_state('media_room_camera')
-    back_room_camera = get_smartplug_state('back_room_camera')
+    # subwoofer = get_smartplug_state('subwoofer')
+    study_camera = get_smartplug_state('study_camera')
+    living_room_camera = get_smartplug_state('living_room_camera')
 
     # IP / VPN Sensors
     for row in ip_sensor_data:
@@ -101,9 +101,9 @@ def main():
             vpn_iptorrents = row['vpn_connected']
 
     data = {
-        'subwoofer': subwoofer,
-        'media_room_camera': media_room_camera,
-        'back_room_camera': back_room_camera,
+        # 'subwoofer': subwoofer,
+        'study_camera': study_camera,
+        'living_room_camera': living_room_camera,
         'vpn_nyaa': vpn_nyaa,
         'vpn_iptorrents': vpn_iptorrents,
         'receiver_power': receiver_stats['power'],

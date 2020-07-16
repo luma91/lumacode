@@ -10,8 +10,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Modify the following for your setup....
 meters = [
-    {'name': 'media_room', 'mac': 'de:5b:6d:46:96:21'},
-    {'name': 'bed_room', 'mac': 'e7:27:36:07:b5:b7'},
+    {'name': 'living_room', 'mac': 'de:5b:6d:46:96:21'},
+    {'name': 'study', 'mac': 'e7:27:36:07:b5:b7'},
 ]
 
 

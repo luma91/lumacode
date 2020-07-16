@@ -107,9 +107,9 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
         c = lifx.Connection(lights)
         lifx_lights = c.power_status()
 
-        if lifx_lights == 0:
-            lifx_lights = 1
-            self.lifx(1)
+        # if lifx_lights == 0:
+        #     lifx_lights = 1
+        #     self.lifx(1)
 
         # Load Config
         configuration = local_config(0)
@@ -134,11 +134,10 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
             self.setMaximumHeight(lowdpi_layout_height)
             self.setMaximumWidth(lowdpi_layout_width)
 
-        if lifx_lights == 0:
-            self.lifx_layout.hide()
+        # if lifx_lights == 0:
+        #    self.lifx_layout.hide()
 
         # Maja's PC
-
         if "shadow" in home_path.lower():
 
             self.sound_desk.released.connect(lambda: self.sound_ops(0))
@@ -152,7 +151,6 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
             self.smart_lights_label.hide()
 
         else:
-
             self.display_mirror.hide()
             self.display_restore.hide()
             self.sound_desk.hide()
@@ -232,7 +230,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
         self.receiver_tv.released.connect(lambda: self.receiver_control(5, 0))
         self.receiver_headphones.released.connect(lambda: self.receiver_control(7, 0))
         self.receiver_bedroom.released.connect(lambda: self.receiver_control(4, 0))
-        self.receiver_control(0, 0)
+        # self.receiver_control(0, 0)
 
         self.camera_button.released.connect(lambda: self.camera_toggle())
 
@@ -810,7 +808,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
                 # Get Volume
                 current_volume = rec.get_volume()
 
-                self.receiver_vol.setValue(current_volume[0])
+                self.receiver_vol.setValue(int(current_volume[0]))
                 self.current_vol.setText(str(current_volume[1]) + " dB")
 
             # Toggle Power / Mute
@@ -909,12 +907,18 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
         global desk_lights
 
         if shutdown_check == 1:
-            print("Emergency Shutdown!")
+            print("Shutting Down")
 
-            # Shutdown Devices
+            # Shutdown Wifi370
             try:
                 c = wifi370.Connection()
                 c.turn_off()
+
+            except Exception as e:
+                print(e)
+
+            # Shutdown LIFX
+            try:
                 self.receiver_control(1, "PF")
                 c = lifx.Connection(lights)
                 c.power_off()
@@ -934,6 +938,7 @@ class LumaTools(QtWidgets.QMainWindow, Ui_MainWindow):
             # Shutdown System
             if "Windows" in platform.platform():
                 os.system('shutdown -s -t 1')
+
             else:
                 os.system('shutdown now')
 
@@ -1013,10 +1018,10 @@ class PresetsWindow(QtWidgets.QMainWindow):
 
         # Update UI
         if color:
-            self.parent.red_slider.setValue(color[1] * 100)
-            self.parent.green_slider.setValue(color[2] * 100)
-            self.parent.blue_slider.setValue(color[3] * 100)
-            self.parent.v_slider.setValue(color[0] * 100)
+            self.parent.red_slider.setValue(int(color[1] * 100))
+            self.parent.green_slider.setValue(int(color[2] * 100))
+            self.parent.blue_slider.setValue(int(color[3] * 100))
+            self.parent.v_slider.setValue(int(color[0] * 100))
 
         print("Set Preset: %s" % preset.title())
 
@@ -1026,21 +1031,31 @@ def local_config(operation):
     global configuration
     global desk_lights
 
+    default_configuration = {"config": {}, "desk_lights": {"power": "off", "r": "0", "g": "0", "b": "0", "v": "0"}}
+
     # Read Configuration
     if operation == 0:
 
         if os.path.exists(local_config_file) is False:
 
             print("local config not found. creating a new config file.")
-            configuration = {"config": {}, "desk_lights": {"power": "off", "r": "0", "g": "0", "b": "0", "v": "0"}}
 
             with open(local_config_file, "w") as f:
-                json.dump(configuration, f)
+                json.dump(default_configuration, f)
 
         else:
             print("local config found.")
-            with open(local_config_file, "r") as f:
-                configuration = json.load(f)
+            try:
+                with open(local_config_file, "r") as f:
+                    configuration = json.load(f)
+
+            except Exception as e:
+                print(e)
+
+                with open(local_config_file, "w") as f:
+                    json.dump(default_configuration, f)
+
+                return default_configuration
 
         return configuration
 

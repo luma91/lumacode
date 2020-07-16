@@ -10,7 +10,7 @@ async def check_new_episodes(client, channel):
 
     sys.path.append(os.path.join(os.path.dirname(__file__), '../nyaa'))
     import plex_sync
-    base_directory = "/mnt/ds918-Media/.temp"
+    base_directory = "/mnt/Media/.temp"
     plex_directory = "/mnt/Media/Anime"
     download_dir = os.path.join(base_directory, "transmission/completed")
 

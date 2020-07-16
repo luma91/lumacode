@@ -36,11 +36,12 @@ def main(sync_op):
             logger.info("windows environment detected.")
 
             source_path = 'Z:/lumacode'
-            backup_path = 'L:/'
+            destination_path = 'L:/'
 
-            cmd = ['robocopy', source_path, backup_path, '/e',  '/xo',  '/purge']
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
-            logger.info(proc.stdout)
+            # cmd = ['robocopy', source_path, backup_path, '/MIR']
+            os.system('robocopy %s %s /MIR /XD .git .idea data' % (source_path, destination_path))
+            # proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+            # logger.info(proc.stdout)
 
         # Linux
         else:

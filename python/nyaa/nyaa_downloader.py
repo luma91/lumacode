@@ -11,9 +11,8 @@ sys.path.append(base_path)
 sys.path.append(os.path.join(base_path, '..'))
 
 website = "https://nyaa.si/?page=rss"
-base_directory = "/mnt/ds918-Media/.temp"
-base_directory_nas = "/volume1/Media/.temp"
-base_directory_windows = "Q:/.temp"
+base_directory = "/mnt/Media/.temp"
+base_directory_windows = "M:/.temp"
 flags = "&c=1_2&f=0"  # These do something, I'm totally sure of it...
 video_quality = "1080p"
 ignore_flags = ["mini", "batch", "batched", "NoobSubs", "Where", "Hardsub", "60FPS"]  # Keywords to ignore
@@ -38,11 +37,6 @@ def main(mode='gui'):
         else:
             from PyQt5 import QtWidgets, uic, QtCore
             plex_directory = "/mnt/Media/Anime"
-
-    # Synology
-    # elif mode == 'nas':
-    #    plex_directory = "/volume1/Media/Anime"
-    #    directory = base_directory_nas
 
     show_database = os.path.join(directory, "show_database.json")
     torrent_dir = os.path.join(directory, "transmission/watch")

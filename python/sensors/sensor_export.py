@@ -15,6 +15,7 @@ import threading
 import time
 import os
 import json
+from urllib import error
 from calendar import timegm
 from datetime import datetime, timedelta
 import atexit
@@ -27,18 +28,22 @@ logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(m
 time_delay = 30
 
 # Get Ping on Reset
+packet_loss = 0
 ping = internet_ping.get_ping()
 net_alive = internet_ping.get_alive()
 
+data_processed = 0
 data = {}
 static_data = {}
 
 # List of Sensors
 
 sensor_list = [
-    'media_room_temperature', 'media_room_humidity',
-    'bed_room_temperature', 'bed_room_humidity', 'Pi_Cpu_temp',
-    'hs110_volts', 'hs110_watts', 'outside_temp', 'ping', 'net_alive'
+    'living_room_temperature', 'living_room_humidity',
+    'study_temperature', 'study_humidity',
+    'living_room_hs110_volts', 'living_room_hs110_watts',
+    'study_hs110_volts', 'study_hs110_watts',
+    'outside_temp', 'ping', 'packet_loss', 'Pi_Cpu_temp'
 ]
 
 # Get Static Sensors
@@ -165,9 +170,19 @@ def additional_sensors_thread():
 
     while True:
         ping = internet_ping.get_ping()
-        net_alive = internet_ping.get_alive()
+        # net_alive = internet_ping.get_alive()
 
-        time.sleep(15)
+        time.sleep(10)
+
+
+def packet_loss_thread():
+
+    global packet_loss
+
+    while True:
+        packet_loss = internet_ping.get_packet_loss()
+        logging.info('packet loss: %s%%' % packet_loss)
+        time.sleep(5)
 
 
 def static_sensor_thread():
@@ -191,16 +206,19 @@ def static_sensor_thread():
         time.sleep(5)
 
 
-def sensor_export_thread():
+def gather_data_thread():
 
+    global data_processed
     global data
     global ping
+    global packet_loss
     global net_alive
-    logging.info("Initializing Sensor Export Thread")
+    logging.info("Initializing Sensor Gather Thread")
 
     # Infinite Loop
     while True:
 
+        data_processed = 0
         now = get_current_time()
         switchbot_sensor_data = []
         sensors = os.listdir(json_export_path)
@@ -213,7 +231,7 @@ def sensor_export_thread():
 
             except Exception as e:
                 logging.error(e)
-                print('Cannot Load: %s' % sensor)
+                logging.warning('cannot load: %s' % sensor)
                 pass
 
         try:
@@ -221,44 +239,74 @@ def sensor_export_thread():
             switch_bot_sensor.main(json_export_path)
             pi_current_temp = float(pi_temp.measure_temp())
 
-            hs110_monitor = hs110_power_monitor.sensor_export()
-            outside_temp = weatherzone.get_temp()
+            try:
+                outside_temp = weatherzone.get_temp()
+
+            # Cannot get outside temp?
+            except error.URLError:
+                logging.error('can\'t get outside temp?')
+                outside_temp = 0
+
+            # Get HS110 Sensors
+            hs110_monitor_sensors = hs110_power_monitor.sensor_export()
+
             new_data = get_data()
 
             # Update with latest Switch bot Sensor Readings
             for sensor in switchbot_sensor_data:
 
-                if sensor['sensor_name'] == 'bed_room':
-                    new_data['bed_room_temperature'].append([sensor['temperature'], now])
-                    new_data['bed_room_humidity'].append([sensor['humidity'], now])
-                    # new_data['bed_room_battery'].append([sensor['battery'], now])
+                if sensor['sensor_name'] == 'living_room':
+                    new_data['living_room_temperature'].append([sensor['temperature'], now])
+                    new_data['living_room_humidity'].append([sensor['humidity'], now])
 
-                if sensor['sensor_name'] == 'media_room':
-                    new_data['media_room_temperature'].append([sensor['temperature'], now])
-                    new_data['media_room_humidity'].append([sensor['humidity'], now])
-                    # new_data['media_room_battery'].append([sensor['battery'], now])
+                if sensor['sensor_name'] == 'study':
+                    new_data['study_temperature'].append([sensor['temperature'], now])
+                    new_data['study_humidity'].append([sensor['humidity'], now])
 
             # Other Sensors
             new_data['Pi_Cpu_temp'].append([pi_current_temp, now])
-            new_data['hs110_volts'].append([hs110_monitor[0], now])
-            new_data['hs110_watts'].append([hs110_monitor[1], now])
+
+            # HS110 Living Room
+            new_data['living_room_hs110_volts'].append([hs110_monitor_sensors['living_room_sensor'][0], now])
+            new_data['living_room_hs110_watts'].append([hs110_monitor_sensors['living_room_sensor'][1], now])
+
+            # HS110 Study
+            new_data['study_hs110_volts'].append([hs110_monitor_sensors['study_sensor'][0], now])
+            new_data['study_hs110_watts'].append([hs110_monitor_sensors['study_sensor'][1], now])
+
             new_data['outside_temp'].append([outside_temp, now])
             new_data['ping'].append([ping, now])
-            new_data['net_alive'].append([net_alive, now])
+            new_data['packet_loss'].append([packet_loss, now])
 
-            # Write Data to Disk
-            write_data(new_data)
+            # Update Memory
             stored_data = new_data
 
             # Update Data in Memory
             data = stored_data
-            print('Finished Writing Data!')
+            logging.info('finished updating data!')
 
         except Exception as e:
             logging.exception(e)
 
         # Sleep for Time Delay
-        time.sleep(time_delay)
+        data_processed = 1
+        time.sleep(10)
+
+
+def sensor_export_thread():
+
+    global data
+    global data_processed
+
+    while True:
+
+        if data_processed == 1:
+
+            # Write Data to Disk
+            logging.info('writing to disk...')
+            write_data(data)
+            logging.info('done...')
+            time.sleep(time_delay)
 
 
 def save_on_exit():
@@ -297,11 +345,15 @@ atexit.register(save_on_exit)
 
 # Initialize and Start Threads
 t1 = threading.Thread(target=bottle_thread)
-t2 = threading.Thread(target=sensor_export_thread)
+t2 = threading.Thread(target=gather_data_thread)
 t3 = threading.Thread(target=static_sensor_thread)
 t4 = threading.Thread(target=additional_sensors_thread)
+t5 = threading.Thread(target=packet_loss_thread)
+t6 = threading.Thread(target=sensor_export_thread)
 
 t1.start()
 t2.start()
 t3.start()
 t4.start()
+t5.start()
+t6.start()
