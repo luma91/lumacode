@@ -11,6 +11,9 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
+# Full Path
+full_path = os.path.join(config.base_path, config.data_directory)
+
 
 def gather_ratings():
 
@@ -23,31 +26,45 @@ def gather_ratings():
     print('gathering data from web.')
 
     output = []
-    request = urllib.request.Request(config.myanimelist_url)
-    response = urllib.request.urlopen(request)
-    soup = BeautifulSoup(response, 'html.parser')
-    elements = soup.find_all('div', attrs={'class': 'seasonal-anime js-seasonal-anime'})
-    season = soup.find('a', attrs={'class': 'on'}).text.strip()
-    print('current_season: %s' % season)
+    seasons = get_season_data()['seasons']
 
-    for item in elements:
-        title = item.find('a', attrs={'class': 'link-title'}).text.strip()
-        url = item.find('a', attrs={'class': 'link-title'})['href']
-        rating = item.find('span', attrs={'title': 'Score'}).text.strip()
-        popularity = item.find('span', attrs={'title': 'Members'}).text.strip().replace(',', '')
+    for season in seasons:
 
-        # Ignore shows with a non applicable rating.
-        if 'N/A' not in rating:
-            show_data = {'title': title,
-                         'url': url,
-                         'season': season,
-                         'rank': float(rating),
-                         'popularity': int(popularity)}
+        print('processing: %s at url: %s' % (season[0], season[1]))
 
-            output.append(show_data)
+        request = urllib.request.Request(season[1])
+        response = urllib.request.urlopen(request)
+        soup = BeautifulSoup(response, 'html.parser')
 
-        else:
-            print('N/A in %s' % title)
+        elements = soup.find_all('div', attrs={'class': 'seasonal-anime js-seasonal-anime'})
+        current_season = season[0]
+
+        num_success = 0
+        num_empty = 0
+        for item in elements:
+            title = item.find('a', attrs={'class': 'link-title'}).text.strip()
+            url = item.find('a', attrs={'class': 'link-title'})['href']
+            rating = item.find('span', attrs={'title': 'Score'}).text.strip()
+            popularity = item.find('span', attrs={'title': 'Members'}).text.strip().replace(',', '')
+            info = item.find('div', attrs={'class': 'info'}).text
+            category = ''.join(info.split()).split('-')[0]
+
+            # Ignore shows with a non applicable rating.
+            if 'N/A' not in rating:
+                show_data = {'title': title,
+                             'url': url,
+                             'season': current_season,
+                             'rank': float(rating),
+                             'popularity': int(popularity),
+                             'category': category}
+
+                output.append(show_data)
+                num_success += 1
+
+            else:
+                num_empty += 1
+
+        print('num_success: %s num_empty: %s' % (num_success, num_empty))
 
     return output
 
@@ -64,6 +81,40 @@ def make_timestamp():
     return int(now.timestamp())
 
 
+def get_season_data():
+
+    request = urllib.request.Request('http://myanimelist.net/anime/season')
+    response = urllib.request.urlopen(request)
+    soup = BeautifulSoup(response, 'html.parser')
+    current_season = soup.find('a', attrs={'class': 'on'}).text.strip()
+    print('current_season: %s' % current_season)
+
+    # Get Seasons
+    seasons = []
+    horiznav_nav = soup.find('div', attrs={'class': 'horiznav_nav'})
+    elements = horiznav_nav.findChildren('a')
+    blacklist = ['Archive', 'Schedule', 'Later', '...']
+    for element in elements:
+        season = element.text.strip(), element['href']
+
+        if season[0] not in blacklist:
+            seasons.append(season)
+
+    season_data = {'current_season': current_season, 'seasons': seasons}
+
+    return season_data
+
+
+def read_season_data():
+
+    season_file_path = os.path.join(config.base_path, 'season_data.json')
+    if os.path.exists(season_file_path):
+        with open(season_file_path, 'r') as season_file:
+            season_data = json.load(season_file)
+
+    return season_data
+
+
 def read_data():
 
     """
@@ -71,18 +122,17 @@ def read_data():
     Returns a list.
 
     """
-
-    if os.path.exists(config.data_directory):
+    if os.path.exists(full_path):
 
         print('reading from disk.')
 
         data = {}
-        files = os.listdir(config.data_directory)
+        files = os.listdir(full_path)
 
         for f in files:
 
             if f.startswith('.') is False:
-                show_path = os.path.join(config.data_directory, f)
+                show_path = os.path.join(full_path, f)
                 with open(show_path, 'r') as json_file:
                     data.update({f: json.load(json_file)})
 
@@ -90,7 +140,7 @@ def read_data():
             return data
 
 
-def write_data(input_data):
+def write_data(input_data, season_data):
 
     # If there is data already on disk, we will append the new results with a timestamp as a sample.
     print('writing to disk.')
@@ -100,12 +150,16 @@ def write_data(input_data):
         file_name = show['file_name']
         file_name = file_name.replace('/', '_')
         data = show['data']
-        show_path = os.path.join(config.data_directory, file_name)
+        show_path = os.path.join(full_path, file_name)
 
         print('updating %s' % show_path)
 
         with open(show_path, 'w+') as json_file:
             json.dump(data, json_file, indent=1)
+
+    # Write current season
+    with open(os.path.join(config.base_path, 'season_data.json'), 'w+') as season_file:
+        json.dump(season_data, season_file, indent=1)
 
     print('done.')
 
@@ -136,6 +190,7 @@ def convert_to_samples(input_data):
             'title': show['title'],
             'url': show['url'],
             'season': show['season'],
+            'category': show['category'],
             'datapoints': [sample_data]
         }}
 
@@ -155,6 +210,7 @@ def convert_to_samples(input_data):
                         'title': show['title'],
                         'url': show['url'],
                         'season': show['season'],
+                        'category': show['category'],
                         'datapoints': datapoints
                     }}
 
@@ -176,11 +232,13 @@ def process_data():
         # Collect the latest ratings
         data = gather_ratings()
 
+        season_data = get_season_data()
+
         # Process the data and append to old data
         new_data = convert_to_samples(data)
 
         # Write the new data to disk
-        write_data(new_data)
+        write_data(new_data, season_data)
 
         # Timeout until next cycle
         sleep_duration = timedelta(hours=24).total_seconds()

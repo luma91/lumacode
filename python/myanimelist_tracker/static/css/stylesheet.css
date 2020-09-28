@@ -10,3 +10,54 @@ body {
     background-color: #27292f;
     padding: 25px;
 }
+
+.header {
+    padding: 10px;
+    margin-bottom: 25px;
+}
+
+.filter_title {
+    font-size: 16px;
+    margin: 25px;
+    text-align: center;
+
+}
+
+.limit_display {
+    float: right;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ccc;
+}
+
+.menu {
+    font-size: 13px;
+}
+
+.menu-item {
+    padding-right: 5px;
+}
+
+a.menu-active:link {
+    font-weight: bold;
+    color: #fa5;
+}
+
+a.menu-active:visited {
+    color: #fa5;
+}
+
+a:link {
+    color: #aaa;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #aaa;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
