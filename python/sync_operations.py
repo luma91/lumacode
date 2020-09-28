@@ -45,8 +45,8 @@ def main(sync_op):
 
         # Linux
         else:
-            source_path = '/mnt/Dropbox/lumacode/'
-            backup_path = '/mnt/lumacode'
+            source_path = '/mnt/Dropbox/lumacode/python/'
+            backup_path = '/mnt/lumacode/python'
             cmd = ['/bin/sh', '-c', 'rsync -av \"' + source_path + '\" \"' + backup_path + '\" --delete']
             proc = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
             logger.info(proc.stdout)

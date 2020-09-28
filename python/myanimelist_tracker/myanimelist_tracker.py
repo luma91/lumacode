@@ -27,6 +27,8 @@ def gather_ratings():
     response = urllib.request.urlopen(request)
     soup = BeautifulSoup(response, 'html.parser')
     elements = soup.find_all('div', attrs={'class': 'seasonal-anime js-seasonal-anime'})
+    season = soup.find('a', attrs={'class': 'on'}).text.strip()
+    print('current_season: %s' % season)
 
     for item in elements:
         title = item.find('a', attrs={'class': 'link-title'}).text.strip()
@@ -38,10 +40,14 @@ def gather_ratings():
         if 'N/A' not in rating:
             show_data = {'title': title,
                          'url': url,
+                         'season': season,
                          'rank': float(rating),
                          'popularity': int(popularity)}
 
             output.append(show_data)
+
+        else:
+            print('N/A in %s' % title)
 
     return output
 
@@ -92,8 +98,11 @@ def write_data(input_data):
     for show in input_data:
 
         file_name = show['file_name']
+        file_name = file_name.replace('/', '_')
         data = show['data']
         show_path = os.path.join(config.data_directory, file_name)
+
+        print('updating %s' % show_path)
 
         with open(show_path, 'w+') as json_file:
             json.dump(data, json_file, indent=1)
@@ -126,6 +135,7 @@ def convert_to_samples(input_data):
         new_data = {'file_name': file_name, 'data': {
             'title': show['title'],
             'url': show['url'],
+            'season': show['season'],
             'datapoints': [sample_data]
         }}
 
@@ -144,6 +154,7 @@ def convert_to_samples(input_data):
                     new_data = {'file_name': file_name, 'data': {
                         'title': show['title'],
                         'url': show['url'],
+                        'season': show['season'],
                         'datapoints': datapoints
                     }}
 

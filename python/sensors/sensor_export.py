@@ -41,8 +41,9 @@ static_data = {}
 sensor_list = [
     'living_room_temperature', 'living_room_humidity',
     'study_temperature', 'study_humidity',
-    'living_room_hs110_volts', 'living_room_hs110_watts',
-    'study_hs110_volts', 'study_hs110_watts',
+    'living_room_hs110_volts', 'living_room_hs110_watts', 'living_room_hs110_day_rate',
+    'study_hs110_volts', 'study_hs110_watts', 'study_hs110_day_rate',
+    'shadow_hs110_volts', 'shadow_hs110_watts', 'shadow_hs110_day_rate',
     'outside_temp', 'ping', 'packet_loss', 'Pi_Cpu_temp'
 ]
 
@@ -267,12 +268,19 @@ def gather_data_thread():
             new_data['Pi_Cpu_temp'].append([pi_current_temp, now])
 
             # HS110 Living Room
-            new_data['living_room_hs110_volts'].append([hs110_monitor_sensors['living_room_sensor'][0], now])
-            new_data['living_room_hs110_watts'].append([hs110_monitor_sensors['living_room_sensor'][1], now])
+            new_data['living_room_hs110_volts'].append([hs110_monitor_sensors['living_room_sensor']['volts'], now])
+            new_data['living_room_hs110_watts'].append([hs110_monitor_sensors['living_room_sensor']['watts'], now])
+            new_data['living_room_hs110_day_rate'].append([hs110_monitor_sensors['living_room_sensor']['day_rate'], now])
 
             # HS110 Study
-            new_data['study_hs110_volts'].append([hs110_monitor_sensors['study_sensor'][0], now])
-            new_data['study_hs110_watts'].append([hs110_monitor_sensors['study_sensor'][1], now])
+            new_data['study_hs110_volts'].append([hs110_monitor_sensors['study_sensor']['volts'], now])
+            new_data['study_hs110_watts'].append([hs110_monitor_sensors['study_sensor']['watts'], now])
+            new_data['study_hs110_day_rate'].append([hs110_monitor_sensors['study_sensor']['day_rate'], now])
+
+            # HS110 Shadow
+            new_data['shadow_hs110_volts'].append([hs110_monitor_sensors['shadow_sensor']['volts'], now])
+            new_data['shadow_hs110_watts'].append([hs110_monitor_sensors['shadow_sensor']['watts'], now])
+            new_data['shadow_hs110_day_rate'].append([hs110_monitor_sensors['shadow_sensor']['day_rate'], now])
 
             new_data['outside_temp'].append([outside_temp, now])
             new_data['ping'].append([ping, now])
@@ -322,22 +330,26 @@ def write_data(new_data):
 
     for sensor in sensor_list:
         sensor_path = os.path.join(dir_path, sensor + '.json')
-        sensor_data = new_data[sensor]
 
-        pruned_data = []
+        try:
+            sensor_data = new_data[sensor]
+            pruned_data = []
 
-        for sample in sensor_data:
-            timestamp = datetime.fromtimestamp(sample[1])
+            for sample in sensor_data:
+                timestamp = datetime.fromtimestamp(sample[1])
 
-            if timestamp > (now - timedelta(days=7)):
-                pruned_data.append(sample)
+                if timestamp > (now - timedelta(days=7)):
+                    pruned_data.append(sample)
 
-        # Add Pruned Data to Export
-        export_data = {sensor: pruned_data}
+            # Add Pruned Data to Export
+            export_data = {sensor: pruned_data}
 
-        print('writing to: %s' % sensor_path)
-        with open(sensor_path, 'w+') as json_file:
-            json.dump(export_data, json_file, indent=2)
+            print('writing to: %s' % sensor_path)
+            with open(sensor_path, 'w+') as json_file:
+                json.dump(export_data, json_file, indent=2)
+
+        except KeyError:
+            print('Cannot write: %s to disk...' % sensor)
 
 
 # Register Exit Handler

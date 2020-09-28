@@ -225,7 +225,6 @@ def main(mode='gui'):
 
                     try:
                         value = value.split(", ")
-                        num = len(shows) + 1
                         data_formatted = {'name': value[1], 'subgroup': value[0], 'fullhd': 'yes'}
                         shows.append(data_formatted)
 
@@ -322,7 +321,7 @@ def main(mode='gui'):
                                 ignore = 1
 
                         if ignore == 0:
-                            if str(a['name']) in title:
+                            if str(a['name']).lower() in title.lower():
 
                                 # Check for existing torrent files, skip if existing, then Download latest
                                 for i in files:

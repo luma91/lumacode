@@ -1,6 +1,5 @@
 # Define the global paths here
-import os
 
-myanimelist_url = 'http://myanimelist.net/anime/season'
-abspath = os.path.dirname(os.path.abspath(__file__))
-data_directory = os.path.join(abspath, 'data')
+# UPDATE SEASON MANUALLY!
+myanimelist_url = 'http://myanimelist.net/anime/season/2020/summer'
+data_directory = '/mnt/Dropbox/lumacode/anime_tracker/data'

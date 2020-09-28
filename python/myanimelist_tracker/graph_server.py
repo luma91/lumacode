@@ -25,8 +25,8 @@ def convert_timestamp(timestamp):
     """
 
     dt_object = datetime.fromtimestamp(timestamp)
-    output = datetime.strftime(dt_object, '%d/%m/%y %H:%M:%S')
-    return output
+    formatted_output = datetime.strftime(dt_object, '%d/%m/%y %H:%M:%S')
+    return dt_object, formatted_output
 
 
 def web_server():
@@ -57,13 +57,14 @@ def web_server():
 
         # Define and Set Result Limit
         result_limit = request.args.get('limit')
+        weeks_back = request.args.get('weeks_back')
+        season = request.args.get('season')
 
         if result_limit:
-
             result_limit = int(result_limit)
 
         else:
-            result_limit = 10
+            result_limit = 25
 
         show_data = []
         num = 1
@@ -77,6 +78,11 @@ def web_server():
 
             for show in sorted_data:
 
+                # Season Filter
+                if season:
+                    if str(season).lower() not in data[show]['season'].lower():
+                        continue
+
                 if num <= result_limit:
 
                     color = '%02X%02X%02X' % (make_color(), make_color(), make_color())
@@ -88,8 +94,16 @@ def web_server():
                     for sample in datapoints:
 
                         sample_time = convert_timestamp(sample[1])
+
+                        # If weeks defined, skip samples before this time.
+                        if weeks_back:
+                            now = datetime.now()
+                            td = timedelta(weeks=int(weeks_back))
+                            if now - td > sample_time[0]:
+                                continue
+
                         sample_data = sample[0]['rank']
-                        rank_samples.append('{x: "' + sample_time + '", y: ' + str(sample_data) + '}')
+                        rank_samples.append('{x: "' + sample_time[1] + '", y: ' + str(sample_data) + '}')
                         rank_samples_formatted = ', '.join(rank_samples)
 
                     show_data.append('{ label: "' + title + '", data: [' + rank_samples_formatted + '], borderColor: "#' + color + '", fill: false }')
