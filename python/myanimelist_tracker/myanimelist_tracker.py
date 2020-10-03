@@ -15,6 +15,30 @@ from bs4 import BeautifulSoup
 full_path = os.path.join(config.base_path, config.data_directory)
 
 
+def month_to_season(start_date):
+
+    """
+    Get season from month
+
+    """
+
+    seasons = {
+        'spring': ['mar', 'apr', 'may'],
+        'summer': ['jun', 'jul', 'aug'],
+        'fall': ['sep', 'oct', 'nov'],
+        'winter': ['dec', 'jan', 'feb']
+    }
+
+    for season in seasons:
+
+        # Return the season
+        season_months = seasons[season]
+
+        for month in season_months:
+            if month in start_date.lower():
+                return season
+
+
 def gather_ratings():
 
     """
@@ -48,6 +72,26 @@ def gather_ratings():
             popularity = item.find('span', attrs={'title': 'Members'}).text.strip().replace(',', '')
             info = item.find('div', attrs={'class': 'info'}).text
             category = ''.join(info.split()).split('-')[0]
+            continuing = True
+
+            start_date_string = info.split('-')[1].strip()
+            start_date_split = start_date_string.split(', ')
+            if len(start_date_split) > 1:
+                start_date, start_year = start_date_split[0], start_date_split[1]
+
+                # Replace ?? Entries with the 1st.
+                start_date = start_date.replace('??', '1')
+                start_season = month_to_season(start_date)
+
+                # Check if show is continuing.
+                if start_season and start_season.lower() in current_season.lower():
+
+                    if start_year in current_season:
+                        continuing = False
+                        print('%s is NEW. start_date: %s. start_season: %s. current_season: %s' % (title, start_date_string, start_season, current_season))
+
+            else:
+                print('ERROR! no date: %s' % title)
 
             # Ignore shows with a non applicable rating.
             if 'N/A' not in rating:
@@ -56,7 +100,8 @@ def gather_ratings():
                              'season': current_season,
                              'rank': float(rating),
                              'popularity': int(popularity),
-                             'category': category}
+                             'category': category,
+                             'continuing': continuing}
 
                 output.append(show_data)
                 num_success += 1
@@ -191,6 +236,7 @@ def convert_to_samples(input_data):
             'url': show['url'],
             'season': show['season'],
             'category': show['category'],
+            'continuing': show['continuing'],
             'datapoints': [sample_data]
         }}
 
@@ -204,14 +250,40 @@ def convert_to_samples(input_data):
                 # If show exists
                 if file_data['title'] == show['title']:
                     datapoints = file_data['datapoints']
-                    datapoints.append(sample_data)
+                    new_datapoints = []
+                    time_samples = []
 
+                    default_gap = timedelta(hours=6)
+
+                    # Filter for issues
+                    for sample in file_data['datapoints']:
+
+                        sample_time = datetime.fromtimestamp(sample[1])
+                        sample_okay = True
+                        for y in time_samples:
+                            if default_gap > (sample_time - datetime.fromtimestamp(y)):
+                                sample_okay = False
+                                print('WARNING: %s has two samples too close. %s and %s' % (file_data['title'], datetime.fromtimestamp(y), sample_time))
+
+                        # Check for Duplicates
+                        if sample[1] not in time_samples:
+                            if sample_okay is True:
+                                new_datapoints.append(sample)
+
+                        else:
+                            print('WARNING: duplicate time-sample %s exists on %s. Skipping.' % (sample[1], file_data['title']))
+
+                        # Add sample to processed samples.
+                        time_samples.append(sample[1])
+
+                    datapoints.append(sample_data)
                     new_data = {'file_name': file_name, 'data': {
                         'title': show['title'],
                         'url': show['url'],
                         'season': show['season'],
                         'category': show['category'],
-                        'datapoints': datapoints
+                        'continuing': show['continuing'],
+                        'datapoints': new_datapoints
                     }}
 
         output_data.append(new_data)

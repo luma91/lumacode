@@ -3,7 +3,44 @@
 <head>
   <title>${PAGE_TITLE}</title>
   <link rel="stylesheet" href="${STYLESHEET_PATH}">
+  <script src="static/js/jquery-3.5.1.min.js"></script>
   <script src="static/js/Chart.bundle.js"></script>
+
+  <script>
+
+  $(document).ready(function() {
+
+    $('#search_form').on('submit', function(e) {
+      e.preventDefault();
+      var formData=$(this).serialize();
+      var fullUrl = window.location.href;
+      const search_data = window.location.search;
+      const urlParams = new URLSearchParams(search_data);
+      const title_param = urlParams.get('title');
+
+      if(title_param) {
+        fullUrl = fullUrl.replace('title=' + title_param, formData);
+        window.location.href = fullUrl;
+      }
+
+      else {
+        var add_char = "?";
+        if(search_data) {
+          add_char = "&";
+        };
+
+        fullUrl = fullUrl.replace('&title=', '');
+        var finalUrl = fullUrl + add_char + formData;
+        window.location.href = finalUrl;
+      }
+
+    });
+
+  });
+
+  </script>
+
+
 </head>
 
 <body>

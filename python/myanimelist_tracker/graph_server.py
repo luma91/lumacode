@@ -62,6 +62,7 @@ def web_server():
         filter_season = request.args.get('season')
         filter_title = request.args.get('title')
         filter_category = request.args.get('category')
+        filter_broadcast = request.args.get('broadcast')
         default_limit = 15
         default_category = 'TV'
 
@@ -84,7 +85,7 @@ def web_server():
 
             # Sort by Ranking (Of last entry)
             sorted_data = OrderedDict(
-                sorted(data.items(), key=lambda x: x[1]['datapoints'][-1][0]['rank'], reverse=True)
+                sorted(data.items(), key=lambda y: y[1]['datapoints'][-1][0]['rank'], reverse=True)
             )
 
             for show in sorted_data:
@@ -106,6 +107,16 @@ def web_server():
                             continue
                 except KeyError:
                     print('WARNING: cannot_get_category: %s' % show)
+
+                # Filter Broadcast Type
+                if filter_broadcast:
+                    if str(filter_broadcast) == 'new':
+                        if data[show]['continuing'] is True:
+                            continue
+
+                    elif str(filter_broadcast) == 'continuing':
+                        if data[show]['continuing'] is False:
+                            continue
 
                 # Result Limit (This has to be last!)
                 if num <= result_limit:
@@ -158,11 +169,14 @@ def web_server():
             if filter_category:
                 url += '&category=%s' % filter_category
 
+            if filter_broadcast:
+                url += '&broadcast=%s' % filter_broadcast
+
             header += '<a href="%s" class="%s">%s</a>' % (url, link_class, season[0])
 
         header += '</div>'
 
-        top_limits = [10, 15, 20, 50, 100]
+        top_limits = [5, 10, 15, 20, 50, 100]
         header += '<div class="limit_display">Top: '
 
         for limit in top_limits:
@@ -173,6 +187,9 @@ def web_server():
 
             if filter_category:
                 url += '&category=%s' % filter_category
+
+            if filter_broadcast:
+                url += '&broadcast=%s' % filter_broadcast
 
             link_class = 'menu-item'
             if result_limit:
@@ -195,12 +212,49 @@ def web_server():
             if filter_season:
                 url += '&season=' + filter_season
 
+            if filter_broadcast:
+                url += '&broadcast=%s' % filter_broadcast
+
             link_class = 'menu-item'
             if filter_category:
                 if category.lower() == filter_category.lower():
                     link_class += ' menu-active'
             header += '<a href="%s" class="%s">%s</a>' % (url, link_class, category)
 
+        header += '</div>'
+
+        broadcast_types = ['new', 'continuing', 'both']
+        header += '<div class="category">Broadcast Type: '
+
+        for x in broadcast_types:
+            url = '?broadcast=' + x
+
+            if result_limit and result_limit != default_limit:
+                url += '&limit=%s' % str(result_limit)
+
+            if filter_season:
+                url += '&season=' + filter_season
+
+            if filter_category:
+                url += '&category=%s' % filter_category
+
+            if filter_broadcast:
+                url += '&broadcast=%s' % filter_broadcast
+
+            link_class = 'menu-item'
+            if filter_broadcast:
+                if x.lower() == filter_broadcast.lower():
+                    link_class += ' menu-active'
+
+            header += '<a href="%s" class="%s">%s</a>' % (url, link_class, x.title())
+
+        header += '</div>'
+
+        header += '<div class="search_field">'
+        header += '<form id="search_form" method="GET">'
+        header += '<input type="text" id="title" placeholder="Type Show Name"  name="title"></input>'
+        header += '<input type="submit"></input>'
+        header += '</form>'
         header += '</div>'
         header += '</div>'
 
