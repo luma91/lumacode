@@ -1,9 +1,9 @@
 # Define the global paths here
 
-import platform
+import getpass
 myanimelist_url = 'http://myanimelist.net/anime/season'
 
-if 'Linuxbox' in platform.node():
+if 'centos' in getpass.getuser():
     base_path = '/mnt/Dropbox/lumacode/anime_tracker'
 else:
     base_path = '/home/centos/anime_tracker'
