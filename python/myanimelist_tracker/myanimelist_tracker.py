@@ -88,7 +88,9 @@ def gather_ratings():
 
                     if start_year in current_season:
                         continuing = False
-                        print('%s is NEW. start_date: %s. start_season: %s. current_season: %s' % (title, start_date_string, start_season, current_season))
+
+                        # print('%s is NEW. start_date: %s. start_season: %s. current_season: %s' %
+                        # (title, start_date_string, start_season, current_season))
 
             else:
                 print('ERROR! no date: %s' % title)
@@ -276,7 +278,9 @@ def convert_to_samples(input_data):
                         # Add sample to processed samples.
                         time_samples.append(sample[1])
 
-                    datapoints.append(sample_data)
+                    # Append Latest Sample
+                    new_datapoints.append(sample_data)
+
                     new_data = {'file_name': file_name, 'data': {
                         'title': show['title'],
                         'url': show['url'],

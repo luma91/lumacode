@@ -1,12 +1,16 @@
 # Define the global paths here
 
-import getpass
+import socket
 myanimelist_url = 'http://myanimelist.net/anime/season'
 
-if 'centos' in getpass.getuser():
-    base_path = '/home/centos/anime_tracker'
-else:
+local = True
+local_addresses = ['raspberrypi', 'Linuxbox']
+
+if any(x for x in local_addresses if x in socket.gethostname()):
     base_path = '/mnt/Dropbox/lumacode/anime_tracker'
+else:
+    base_path = '/home/centos/anime_tracker'
+    local = False
 
-
+log_directory = 'log'
 data_directory = 'data'
