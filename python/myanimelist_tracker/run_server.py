@@ -1,6 +1,5 @@
 from flask import Flask
 import graph_server
-import socket
 import os
 import config
 import logging
