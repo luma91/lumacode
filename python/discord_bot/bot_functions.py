@@ -12,7 +12,7 @@ async def check_new_episodes(client, channel):
     import plex_sync
     base_directory = "/mnt/Media/.temp"
     plex_directory = "/mnt/Media/Anime"
-    download_dir = os.path.join(base_directory, "transmission/completed")
+    download_dir = os.path.join(base_directory, "deluge", "completed")
 
     while True:
 
@@ -32,18 +32,16 @@ async def check_new_episodes(client, channel):
 
             if len(file_list_new) > 0:
                 response = "@everyone New Episodes Available!\n%s" % '\n'.join(file_list_new)
-                check = False
 
                 # Prevent Repeating Messages
-                for i in client.cached_messages:
-                    if response == str(i.content):
-                        check = True
+                if (x for x in client.cached_messages if response not in str(x.content)):
 
-                # All Clear, Let's run the code!
-                if check is False:
-                    print('Sending: %s\n' % response)
-                    await channel.send(response)
+                    # All Clear, Let's run the code!
                     plex_sync.run_sync(plex_directory, base_directory)  # Force Plex Sync
+                    print('Sending: %s\n' % response)
+
+                    # Send a message
+                    await channel.send(response)
 
         # Reduce I/O on NAS.
         time.sleep(30)

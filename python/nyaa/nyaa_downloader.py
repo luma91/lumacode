@@ -39,7 +39,8 @@ def main(mode='gui'):
             plex_directory = "/mnt/Media/Anime"
 
     show_database = os.path.join(directory, "show_database.json")
-    torrent_dir = os.path.join(directory, "transmission/watch")
+    torrent_dir = os.path.join(directory, "deluge", "watch")
+    added_dir = os.path.join(directory, "deluge", "added")
 
     # ------------------------------------------
 
@@ -301,7 +302,8 @@ def main(mode='gui'):
 
                 show_list_length = len(shows)
 
-                files = os.listdir(torrent_dir)
+                files = os.listdir(added_dir)
+                print('checking %s for torrents.' % added_dir)
                 current_id = 0
                 download_list = {}  # Clear Download List
                 self.update_progress.emit(0)
@@ -325,13 +327,12 @@ def main(mode='gui'):
 
                                 # Check for existing torrent files, skip if existing, then Download latest
                                 for i in files:
-                                    if (title + ".torrent") == i or (title + ".torrent.added") == i:
+                                    if (title + ".torrent") == i:
                                         match = 1
                                     else:
                                         continue
 
                                 if match == 0:
-
                                     logger.info("Found an episode for %s!" % title)
                                     self.update_available_tree.emit(title)
                                     download_list.update({title: link})
@@ -382,7 +383,7 @@ def main(mode='gui'):
 
                 show_list_length = len(shows)
 
-                files = os.listdir(torrent_dir)
+                files = os.listdir(added_dir)
                 current_id = 0
                 download_list = {}  # Clear Download List
 

@@ -2,6 +2,9 @@ import os
 import shutil
 import json
 import luma_log
+import subprocess
+import deluge_functions
+import time
 
 # Get Logger
 logger = luma_log.main(__file__)
@@ -20,13 +23,39 @@ def has_numbers(input_string):
             return char
 
 
-def move_file(src, dst, ep):
+def remove_torrent(ep):
+
+    cmd = ['deluge-console', '"connect 192.168.0.238 andrew pass ; info"']
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    _stdout, _stderr = proc
+    print(_stdout, _stderr)
+
+
+def copy_file(src, dst, ep):
 
     try:
-        shutil.move(src, dst)
+        shutil.copy2(src, dst)
         logger.info(">>> Moved %s!\n" % ep)
 
     except Exception as e:
+        print(e)
+        logger.error(e)
+        logger.warning("Cannot move file: " + src + " skipping...")
+        logger.warning("src: %s dst: %s ep: %s" % (src, dst, ep))
+
+
+def move_file(src, dst, ep):
+
+    try:
+        # if os.path.exists(dst) is False:
+        shutil.move(src, dst)
+        logger.info(">>> Moved %s!\n" % ep)
+
+        # else:
+        #    print("Warning: %s exists! Cannot Move!" % dst)
+
+    except Exception as e:
+        print(e)
         logger.error(e)
         logger.warning("Cannot move file: " + src + " skipping...")
         logger.warning("src: %s dst: %s ep: %s" % (src, dst, ep))
@@ -34,7 +63,7 @@ def move_file(src, dst, ep):
 
 def run_sync(plex_directory, base_directory):
 
-    download_dir = os.path.join(base_directory, 'transmission/completed')
+    download_dir = os.path.join(base_directory, 'deluge', 'completed')
     show_database = os.path.join(base_directory, "show_database.json")
 
     with open(show_database, "r") as f:
@@ -62,6 +91,10 @@ def run_sync(plex_directory, base_directory):
                     if os.path.exists(os.path.join(plex_directory, show['name'])):
                         episodes_to_transfer.append(ep)
                         logger.info("EXACT MATCH: \"%s\"\nSource: %s \nDestination: %s\n" % (show['name'], src, dst))
+                        logger.info("Removing Torrents from DELUGE")
+                        deluge_functions.remove_completed_torrents()
+
+                        time.sleep(10)
                         move_file(src, dst, ep)
 
     # Episodes with nowhere to go!
@@ -114,6 +147,10 @@ def run_sync(plex_directory, base_directory):
                                     src = os.path.join(download_dir, ep)
                                     dst = os.path.join(plex_directory, show, ep)
                                     logger.info("Source: %s \nDestination: %s\n" % (src, dst))
+                                    logger.info("Removing Torrents from DELUGE")
+                                    deluge_functions.remove_completed_torrents()
+
+                                    time.sleep(10)
                                     move_file(src, dst, ep)
                                     found_match = 1
 
@@ -123,5 +160,4 @@ def run_sync(plex_directory, base_directory):
     logger.info("Plex Sync Finished.\n")
 
 
-if __name__ == "__main__":
-    run_sync("/mnt/Media/Anime", "/mnt/ds918-Media/.temp")
+
