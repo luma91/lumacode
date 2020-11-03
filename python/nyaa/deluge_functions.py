@@ -90,11 +90,6 @@ def remove_completed_torrents():
 
 
 if __name__ == "__main__":
-    # torrents = list_torrents()
-    # for t in torrents:
-    #     print(t, torrents[t])
-
-    # print(get_torrent_info('Majo no Tabitabi - 02'))
     print(get_completed_torrents())
 
 

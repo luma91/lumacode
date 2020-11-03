@@ -8,7 +8,7 @@ import json
 platform_os = platform.platform()
 base_path = os.path.dirname(__file__)
 sys.path.append(base_path)
-sys.path.append(os.path.join(base_path, '..'))
+sys.path.append(os.path.join(base_path, '../..'))
 
 website = "https://nyaa.si/?page=rss"
 base_directory = "/mnt/Media/.temp"
@@ -25,18 +25,6 @@ def main(mode='gui'):
     import luma_log
     logger = luma_log.main(__file__)
     directory = base_directory
-
-    if mode == 'gui':
-
-        # Windows
-        if "windows" in platform_os.lower():
-            from PyQt5 import QtWidgets, uic, QtCore
-            plex_directory = "M:/Anime"
-            directory = base_directory_windows
-
-        else:
-            from PyQt5 import QtWidgets, uic, QtCore
-            plex_directory = "/mnt/Media/Anime"
 
     show_database = os.path.join(directory, "show_database.json")
     torrent_dir = os.path.join(directory, "deluge", "watch")
@@ -92,7 +80,7 @@ def main(mode='gui'):
 
         import resources
         ui_path = os.path.dirname(__file__)
-        ui_file = 'nyaa.ui'
+        ui_file = '../nyaa.ui'
         Ui_MainWindow, QtBaseClass = uic.loadUiType(os.path.join(ui_path, ui_file), resource_suffix='')
 
         # If database doesn't exist, make a new one.
@@ -126,6 +114,7 @@ def main(mode='gui'):
                 self.show_tree.setColumnWidth(0, 80)
                 self.show_tree.setColumnWidth(1, 75)
                 self.show_tree.setColumnWidth(2, 170)
+                self.show_tree.doubleClicked.connect(self.get_selected)
 
                 # Setup Scan Thread
                 self.scan_shows = ScanShows()
@@ -182,6 +171,28 @@ def main(mode='gui'):
                         logger.info("No new episodes found")
 
                 self.scan_progress.setValue(progress)
+
+            def get_selected(self):
+
+                # Get Selected Row
+                selected_show = None
+                indexes = self.show_tree.selectionModel().selectedRows(3)
+                for index in sorted(indexes):
+                    selected_show = index.data()
+
+                if selected_show:
+                    self.open_myanimelist(selected_show)
+
+            def open_myanimelist(self, show):
+
+                import subprocess
+
+                url = 'https://myanimelist.net/anime.php?q=%s&cat=anime' % show
+                if "windows" in platform_os.lower():
+                    cmd = ["C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe", url]
+                    subprocess.call(cmd)
+
+                print(show)
 
             def download(self):
 
