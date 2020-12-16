@@ -1,0 +1,80 @@
+body {
+    background-color: #21232a;
+    color: #ddd;
+    font-family: arial;
+    font-size: 12px;
+    padding: 50px;
+}
+
+.container {
+    background-color: #27292f;
+    padding: 25px;
+}
+
+.header {
+    padding: 10px;
+    margin-bottom: 25px;
+}
+
+.filter_title {
+    font-size: 16px;
+    margin: 25px;
+    text-align: center;
+
+}
+
+.limit_display {
+    float: right;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ccc;
+}
+
+.menu {
+    font-size: 13px;
+}
+
+.search_field {
+    margin: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.menu-item {
+    padding-right: 5px;
+}
+
+a.menu-active:link {
+    font-weight: bold;
+    color: #fa5;
+}
+
+a.menu-active:visited {
+    color: #fa5;
+}
+
+a:link {
+    color: #aaa;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #aaa;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+input {
+    background-color: #313a41;
+    color: #abc;
+    border: 1px solid #344;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 5px;
+    font-size: 14px;
+}

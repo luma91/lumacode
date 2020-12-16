@@ -1,0 +1,51 @@
+<div style="position: relative; height: 70vh">
+<canvas id="chart"></canvas>
+</div>
+<script>
+
+  new Chart(document.getElementById("chart"), {
+      plugins: [{
+        beforeInit: function(chart, options) {
+            chart.legend.afterFit = function() {
+                this.height = this.height + 25
+            }
+        }
+      }],
+
+      type: 'line',
+      data: {
+        datasets: [
+            ${GRAPH_DATA}
+        ]
+      },
+      options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            title: {
+              display: false,
+            },
+
+            legend: {
+                labels: {
+                    padding: 15
+                }
+            },
+
+            scales: {
+                xAxes: [{
+                    type: "time",
+                    time: {
+                        parser: 'DD/MM/YYYY HH:mm',
+                        unit: 'day'
+                    },
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 20
+                        }
+                }],
+            }
+      }
+    });
+
+
+</script>
