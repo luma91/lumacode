@@ -65,7 +65,7 @@ def move_file(src, dst, ep):
 
 def run_sync(plex_directory, base_directory):
 
-    download_dir = os.path.join(base_directory, 'deluge', 'completed')
+    download_dir = os.path.join(base_directory, 'qbittorrent', 'completed')
     show_database = os.path.join(base_directory, "show_database.json")
 
     with open(show_database, "r") as f:
@@ -93,8 +93,8 @@ def run_sync(plex_directory, base_directory):
                     if os.path.exists(os.path.join(plex_directory, show['name'])):
                         episodes_to_transfer.append(ep)
                         logger.info("EXACT MATCH: \"%s\"\nSource: %s \nDestination: %s\n" % (show['name'], src, dst))
-                        logger.info("Removing Torrents from DELUGE")
-                        deluge_functions.remove_completed_torrents()
+                        # logger.info("Removing Torrents from DELUGE")
+                        # deluge_functions.remove_completed_torrents()
 
                         time.sleep(10)
                         move_file(src, dst, ep)
@@ -149,8 +149,8 @@ def run_sync(plex_directory, base_directory):
                                     src = os.path.join(download_dir, ep)
                                     dst = os.path.join(plex_directory, show, ep)
                                     logger.info("Source: %s \nDestination: %s\n" % (src, dst))
-                                    logger.info("Removing Torrents from DELUGE")
-                                    deluge_functions.remove_completed_torrents()
+                                    # logger.info("Removing Torrents from DELUGE")
+                                    # deluge_functions.remove_completed_torrents()
 
                                     time.sleep(10)
                                     move_file(src, dst, ep)

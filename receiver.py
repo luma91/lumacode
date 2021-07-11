@@ -5,7 +5,7 @@ import time
 
 from lumacode.get_smartdevices import rec_input
 
-receiver_ip = '192.168.0.177'
+receiver_ip = '192.168.0.134'
 
 # Volume Ranges and Remapping: MIN 045 -58 dB //// MAX = -14.5 dB / 132
 low2, low1, high2, high1 = -58, 45, -14.5, 132
@@ -183,7 +183,6 @@ class Main:
 if __name__ == "__main__":
 
     rec = Main()
-    rec.send_receive_command(SPEAKER_OFF)
-    rec.set_input('pc')
-    rec.set_input('pc')
-    rec.set_input('pc')
+    # rec.send_receive_command(SPEAKER_B)
+    # rec.set_input('pc')
+    print(rec.get_input())

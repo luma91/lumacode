@@ -25,12 +25,12 @@ def main(preset, zone='Study'):
     else:
 
         if zone == 'Study':
-            strips = lifx.Connection(lifx.get_lights('Desk'))
-            lamps = lifx.Connection(lifx.get_lights(['Left Lamp', 'Right Lamp']))
+            strips = lifx.Connection(lifx.get_lights('desk_strip'))
+            lamps = lifx.Connection(lifx.get_lights(['left_lamp']))
 
         else:
-            strips = lifx.Connection(lifx.get_lights(['Couch', 'TV']))
-            lamps = lifx.Connection(lifx.get_lights('Lamp'))
+            strips = lifx.Connection(lifx.get_lights(['couch_strip', 'tv_strip']))
+            lamps = lifx.Connection(lifx.get_lights('side_lamp', 'couch_lamp'))
 
         # Make sure they are on
         strips.power_on()
@@ -43,6 +43,10 @@ def main(preset, zone='Study'):
         elif preset == "warm":
             strips.set_hsv(hue=0, sat=.05, br=.18, ke=2000)
             lamps.set_hsv(hue=0, sat=.05, br=.3, ke=2000)
+
+        elif preset == "work":
+            strips.set_hsv(hue=0, sat=0.01, br=.25, ke=3500)
+            lamps.set_hsv(hue=0, sat=0.01, br=.4, ke=3500)
 
         elif preset == "purple":
             strips.set_hsv(hue=300, sat=1, br=.35)
@@ -94,4 +98,4 @@ def main(preset, zone='Study'):
 
 
 if __name__ == "__main__":
-    main('preset_01')
+    main('warm')

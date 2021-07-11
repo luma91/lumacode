@@ -8,12 +8,13 @@ import colorsys
 import math
 
 from lifxlan import Light, MultiZoneLight, LifxLAN
+from lumacode import get_smartdevices
 
 global continue_cycle
 last_hue = 0
 
 
-def get_lights(light_names=None, group=None):
+def get_lights_old(light_names=None, group=None):
 
     num_lights = 6  # Faster discovery, when specified
     lan = LifxLAN(num_lights)
@@ -62,6 +63,39 @@ def get_lights(light_names=None, group=None):
 
         else:
             print('cannot get lights')
+
+
+def get_lights(light_names=None, group=None):
+
+    # Set to List
+    if isinstance(light_names, list) is False:
+        light_names = [light_names]
+
+    light_objects = []
+
+    if group:
+
+        lights = get_smartdevices.address_new(category='lifx', zone=group)
+
+        for light in lights:
+            ip_address = light[list(light.keys())[0]]['address']
+            mac = light[list(light.keys())[0]]['mac']
+            light_object = Light(ip_addr=ip_address, mac_addr=mac)
+            light_objects.append(light_object)
+
+    if light_names:
+
+        for light_name in light_names:
+
+            lights = get_smartdevices.address_new(category='lifx', name=light_name)
+
+            for light in lights:
+                ip_address = light[light_name]['address']
+                mac = light[light_name]['mac']
+                light_object = Light(ip_addr=ip_address, mac_addr=mac)
+                light_objects.append(light_object)
+
+        return light_objects
 
 
 def get_zones(mac, ip):
@@ -346,9 +380,11 @@ class ColorRainbowWorker:
 if __name__ == "__main__":
 
     # Power on all Media Room Lights
-    x = get_lights(['Desk', 'Left Lamp', 'Right Lamp'])
-    print(x)
-    # x = get_lights(group='Study')
+    # x = get_lights(['desk_strip', 'left_lamp'])
+    x = get_lights(group='study')
+
+    # x = get_lights(light_names='desk_strip')
+    # print(x)
 
     c = Connection(x)
     c.toggle_power()

@@ -201,7 +201,7 @@ class NyaaDownloader(QtWidgets.QMainWindow, Ui_MainWindow):
         dlg.setInputMode(QtWidgets.QInputDialog.TextInput)
         dlg.setWindowTitle("Add new show")
         dlg.setLabelText("Format: Subgroup, Show Name")
-        dlg.setTextValue("Erai-raws, ")
+        dlg.setTextValue("SubsPlease, ")
         dlg.resize(500, 100)
         ok = dlg.exec_()
         value = dlg.textValue()
@@ -223,7 +223,7 @@ class NyaaDownloader(QtWidgets.QMainWindow, Ui_MainWindow):
                         json.dump(self.shows, f, indent=2)
 
                     sanitized_path = value[1].strip()
-                    show_path = os.path.join(self.plex_directory, sanitized_path)
+                    show_path = os.path.join(config.plex_directory, sanitized_path)
                     logger.info("Added new show: " + value[1])
                     logger.info("Attempting to make directory in Plex: " + show_path)
 
@@ -276,7 +276,7 @@ class NyaaDownloader(QtWidgets.QMainWindow, Ui_MainWindow):
             logger.info("Okay, I'll pretend that never happened.")
 
 
-if __name__ == "__main__":
+def main():
 
     app = QtWidgets.QApplication(sys.argv)
     window = NyaaDownloader()
@@ -308,3 +308,7 @@ if __name__ == "__main__":
     app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
 
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

@@ -84,29 +84,24 @@ def get_receiver_state():
 def main():
 
     ip_sensor_data = ip_sensor.main()
-    vpn_nyaa = None
-    vpn_iptorrents = None
+    vpn_torrents = None
     receiver_stats = get_receiver_state()
 
     # Get Smart Devices
-    # subwoofer = get_smartplug_state('subwoofer')
-    study_camera = get_smartplug_state('study_camera')
+    subwoofer = get_smartplug_state('subwoofer')
+    kitchen_camera = get_smartplug_state('kitchen_camera')
     living_room_camera = get_smartplug_state('living_room_camera')
 
     # IP / VPN Sensors
     for row in ip_sensor_data:
-        if row['machine'] == 'ds918-transmission':
-            vpn_nyaa = row['vpn_connected']
-
-        if row['machine'] == 'ubuntu-transmission':
-            vpn_iptorrents = row['vpn_connected']
+        if row['machine'] == 'ubuntu-torrents':
+            vpn_torrents = row['vpn_connected']
 
     data = {
-        # 'subwoofer': subwoofer,
-        'study_camera': study_camera,
+        'subwoofer': subwoofer,
+        'kitchen_camera': kitchen_camera,
         'living_room_camera': living_room_camera,
-        'vpn_nyaa': vpn_nyaa,
-        'vpn_iptorrents': vpn_iptorrents,
+        'vpn_torrents': vpn_torrents,
         'receiver_power': receiver_stats['power'],
         'receiver_vol': receiver_stats['vol'],
         'receiver_input': receiver_stats['input']

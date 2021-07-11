@@ -7,7 +7,7 @@ platform_os = platform.platform()
 website = "https://nyaa.si/?page=rss"
 flags = "&c=1_2&f=0"  # These do something, I'm totally sure of it...
 video_quality = "1080p"
-filter_flags = ["mini", "batch", "batched", "NoobSubs", "VRV", "Where", "Hardsub", "60FPS"]  # Keywords to ignore
+filter_flags = ["mini", "batch", "batched", "NoobSubs", "VRV", "Where", "Hardsub", "60FPS", "HEVC"]  # Keywords to ignore
 download_list = []
 base_directory = "/mnt/Media/.temp"
 
@@ -21,8 +21,8 @@ else:
     plex_directory = "/mnt/Media/Anime"
 
 show_database = os.path.join(base_directory, "show_database.json")
-torrent_dir = os.path.join(base_directory, "deluge", "watch")
-added_dir = os.path.join(base_directory, "deluge", "added")
+torrent_dir = os.path.join(base_directory, "qbittorrent", "watch")
+added_dir = os.path.join(base_directory, "qbittorrent", "added")
 
 # For the Logging
 base_path = os.path.dirname(__file__)

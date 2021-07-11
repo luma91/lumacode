@@ -3,7 +3,7 @@
 import urllib.request
 from bs4 import BeautifulSoup
 
-url = "https://www.weatherzone.com.au/vic/melbourne/blackburn"
+url = "https://www.weatherzone.com.au/vic/melbourne/camberwell"
 
 
 def get_temp():
