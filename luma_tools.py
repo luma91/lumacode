@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from lumacode import get_smartdevices, receiver
-from lumacode.lifx import lifx_presets, lifx
+from lumacode.lifx import lifx_presets_old, lifx
 import pyHS100
 
 # Load Qt
@@ -1013,7 +1013,7 @@ class PresetsWindow(QtWidgets.QMainWindow):
 
     def set_preset(self, preset):
 
-        color = lifx_presets.main(preset)
+        color = lifx_presets_old.main(preset)
 
         # Update UI
         if color:

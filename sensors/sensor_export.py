@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from urllib import error
 from bottle import (Bottle, HTTPResponse, run, request, response, json_dumps as dumps)
 
-from lumacode.sensors import hs110_power_monitor, internet_ping, pi_temp, static_sensors, switch_bot_sensor, weatherzone
+from lumacode.sensors import hs110_power_monitor, internet_ping, pi_temp, static_sensors, switch_bot_sensor, temperature
 
 dir_path = '/mnt/tmp/sensor_data'
 json_export_path = os.path.join(dir_path, 'sensors')
@@ -236,7 +236,7 @@ def gather_data_thread():
             pi_current_temp = float(pi_temp.measure_temp())
 
             try:
-                outside_temp = weatherzone.get_temp()
+                outside_temp = temperature.get_temp()
 
             # Cannot get outside temp?
             except error.URLError:

@@ -1,0 +1,175 @@
+
+body {
+    background-color: #252a33;
+    color: #ccc;
+    font-family: arial;
+}
+
+.header {
+    font-size: 36pt;
+    color: #89a;
+    margin-bottom: 20px;
+    background-color: #1c2533;
+    padding: 10px;
+    border: 1px dashed #457;
+}
+
+.preset_group {
+    display: flex;
+    padding-top: 5px;
+}
+
+.light_preview {
+    width: 64px;
+    margin-left: 25px;
+    float: right;
+}
+
+button {
+    background-color: #345;
+    color: #ccd;
+    border: 1px solid #6191c1;
+    padding: 7px;
+}
+
+.power_button {
+    margin-left: 15px;
+    margin-bottom: 15px;
+}
+
+button:hover {
+    background-color: #368;
+}
+
+button:active {
+    background-color: #123;
+}
+
+
+.container {
+    padding: 15px;
+}
+
+.value {
+    font-weight: bold;
+}
+
+/* Flex only on large screens */
+@media only screen and (min-device-width: 480px) {
+    .content {
+        display: flex;
+    }
+}
+
+.left {
+    margin-right: 15px;
+    min-width: 200px;
+}
+
+.right {
+    width: 100%;
+    margin-left: 15px;
+}
+
+.light_group {
+    margin-bottom: 15px;
+}
+
+.light_item {
+    padding-left: 10px;
+
+}
+
+.light_name {
+    color: #c3dded;
+    font-size: 20pt;
+    margin-bottom: 10px;
+}
+
+/* LINKS */
+.light_group_header {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    background-color: #2d3c4c;
+    border: 1px dashed #457;
+
+}
+
+a.group_link:link {font-size:19pt; color: #ccc; text-decoration: none}
+a.group_link:visited {color: #ccc; text-decoration: none}
+a.group_link:active {color: #ccc; text-decoration: none}
+a.group_link:hover {color: #fff; font-weight: bold; text-decoration: none;}
+
+a.item_link:link {font-size:12pt; color: #ccc; text-decoration: none}
+a.item_link:visited {color: #ccc; text-decoration: none}
+a.item_link:active {color: #ccc; text-decoration: none}
+a.item_link:hover {color: #fff; font-weight: bold; text-decoration: none;}
+
+
+a.highlight:link {color: #c3dded; text-decoration: none; font-weight: bold;}
+a.highlight:visited {color: #c3dded; text-decoration: none; font-weight: bold;}
+
+
+/* ---------- SLIDERS ----------  */
+.slidecontainer {
+}
+
+/* The slider itself */
+.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 15px; /* Specified height */
+  background: #456; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.5; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+  margin: 0px;
+  padding: 0px;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 0.9; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 15px; /* Set a specific slider handle width */
+  height: 15px; /* Slider handle height */
+  background: #67DDFF; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+  width: 15px; /* Set a specific slider handle width */
+  height: 15px; /* Slider handle height */
+  background: #67DDFF; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+
+/* MOBILE */
+@media only screen and (max-device-width: 480px) {
+  .light_preview { width: 256px; }
+  .header {font-size: 70pt; margin-bottom: 40px; padding: 25px;}
+  .light_name {font-size: 42pt; margin-bottom: 20px; margin-top: 40px;}
+  a.group_link:link {font-size: 32pt;}
+  .light_group { margin-bottom: 35px; }
+  .light_group_header { padding: 20px;  margin-top: 15px; margin-bottom: 25px; }
+  a.item_link:link {font-size: 20pt;}
+  button { font-size: 32pt; padding: 20px; margin: 5px; }
+  .left { margin-right: 0px;}
+  .right { margin-left: 0px;}
+
+  /* ---------- SLIDERS ----------  */
+  .slider {height: 45px; }
+   .slider::-webkit-slider-thumb { width: 35px; height: 45px; }
+   .slider::-moz-range-thumb { width: 35px; height: 45px; }
+
+
+}

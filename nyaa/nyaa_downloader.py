@@ -39,9 +39,13 @@ class ScanShows(QtCore.QObject):
         self.update_progress.emit(0)
 
         for show in shows:
-            parsed_shows_list, filtered_list = nyaa_downloader_functions.run_scan(logger, show)
+            parsed_shows_list, filtered_list = nyaa_downloader_functions.check_for_episodes(
+                show['subgroup'],
+                show['name'],
+                show['fullhd']
+            )
 
-            for title, link, seeders, size in parsed_shows_list:
+            for title, link in parsed_shows_list:
 
                 if str(show['name']).lower() in title.lower():
                     logger.info("Found an episode for %s!" % title)
@@ -184,7 +188,7 @@ class NyaaDownloader(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def download(self):
 
-        nyaa_downloader_functions.download_torrents(logger, self.download_list)
+        nyaa_downloader_functions.download_torrents(self.download_list)
 
         self.download_button.setEnabled(0)
         message_text = "The torrents should now be on the NAS!"

@@ -1,101 +1,125 @@
 
-from lumacode.lifx import lifx
+import json
+import os
 
-presets = [
-    "bright", "warm", "purple", "bright_blue", "blue", "aqua", "bright_red", "red",
-    "preset_01", "preset_02", "preset_03", "preset_04", "preset_05", "movie", "slow_rainbow",
-    "party"
-]
+# Specify a path for storing LIFX Presets
+
+if os.name == "nt":
+    LIFX_PRESETS = 'T:\\lifx_presets'
+
+else:
+    LIFX_PRESETS = '/mnt/tmp/lifx_presets'
 
 
-def main(preset, zone='Study'):
+def read_preset(preset_path):
 
-    preset = preset.lower()
+    with open(preset_path, 'r') as f:
+        data = json.load(f)
+        return data
 
-    if preset == "slow_rainbow":
-        lights = lifx.get_lights(group=zone)
-        c = lifx.Connection(lights)
-        c.color_rainbow(interval=2, duration=1.5, br=.6, sat=.85, sync=True, daemon=0)
 
-    elif preset == "party":
-        lights = lifx.get_lights(group=zone)
-        c = lifx.Connection(lights)
-        c.color_rainbow(interval=5, duration=.25, br=.9, sat=.9, sync=False, daemon=0)
+def remove_preset(group, preset_name):
 
-    else:
+    preset_path = os.path.join(LIFX_PRESETS, group, preset_name + '.json')
+    print(preset_path)
 
-        if zone == 'Study':
-            strips = lifx.Connection(lifx.get_lights('desk_strip'))
-            lamps = lifx.Connection(lifx.get_lights(['left_lamp']))
+    if os.path.exists(preset_path):
+        os.remove(preset_path)
+
+
+def _iterate_through_presets(presets_folder):
+
+    preset_data = {}
+
+    if os.path.exists(presets_folder):
+        presets = os.listdir(presets_folder)
+
+        for preset in presets:
+            preset_name = os.path.splitext(preset)[0]
+            full_path = os.path.join(presets_folder, preset)
+            preset_data[preset_name] = read_preset(full_path)
+
+    return preset_data
+
+
+def load_presets(group=None):
+
+    """
+    Load presets by group
+
+    """
+
+    if group:
+        group = group.lower().replace(' ', '_')
+
+    preset_data = {}
+
+    if os.path.exists(LIFX_PRESETS):
+
+        if group:
+            preset_data = _iterate_through_presets(os.path.join(LIFX_PRESETS, group))
 
         else:
-            strips = lifx.Connection(lifx.get_lights(['couch_strip', 'tv_strip']))
-            lamps = lifx.Connection(lifx.get_lights('side_lamp', 'couch_lamp'))
 
-        # Make sure they are on
-        strips.power_on()
-        lamps.power_on()
+            groups = os.listdir(LIFX_PRESETS)
+            for group in groups:
+                preset_data[group] = _iterate_through_presets(os.path.join(LIFX_PRESETS, group))
 
-        if preset == "bright":
-            strips.set_hsv(hue=0, sat=0, br=1, ke=4000)
-            lamps.set_hsv(hue=0, sat=0, br=1, ke=4000)
+    return preset_data
 
-        elif preset == "warm":
-            strips.set_hsv(hue=0, sat=.05, br=.18, ke=2000)
-            lamps.set_hsv(hue=0, sat=.05, br=.3, ke=2000)
 
-        elif preset == "work":
-            strips.set_hsv(hue=0, sat=0.01, br=.25, ke=3500)
-            lamps.set_hsv(hue=0, sat=0.01, br=.4, ke=3500)
+def write_preset(preset_name, group, light_data, overwrite=False):
 
-        elif preset == "purple":
-            strips.set_hsv(hue=300, sat=1, br=.35)
-            lamps.set_hsv(hue=300, sat=1, br=.5)
+    # Check if root path exists
+    if os.path.exists(LIFX_PRESETS):
 
-        elif preset == "bright_blue":
-            strips.set_hsv(hue=240, sat=1, br=1)
-            lamps.set_hsv(hue=240, sat=1, br=1)
+        # Check if group exists
+        group_path = os.path.join(LIFX_PRESETS, group.lower())
+        if os.path.exists(group_path) is False:
+            os.mkdir(group_path)
 
-        elif preset == "blue":
-            strips.set_hsv(hue=240, sat=1, br=.3)
-            lamps.set_hsv(hue=240, sat=1, br=.3)
+        light_preset = os.path.join(group_path, preset_name + '.json')
 
-        elif preset == "aqua":
-            strips.set_hsv(hue=180, sat=1, br=.5)
-            lamps.set_hsv(hue=190, sat=1, br=.4)
+        # Prevent Overwriting
+        if os.path.exists(light_preset) and overwrite is False:
+            print('cannot overwrite.')
 
-        elif preset == "bright_red":
-            strips.set_hsv(hue=360, sat=1, br=1)
-            lamps.set_hsv(hue=360, sat=1, br=1)
+        else:
+            with open(light_preset, 'w') as f:
+                data = json.dumps(light_data, indent=1)
+                f.write(data)
 
-        elif preset == "red":
-            strips.set_hsv(hue=360, sat=1, br=.3)
-            lamps.set_hsv(hue=360, sat=1, br=.3)
 
-        elif preset == "preset_01":
-            strips.set_hsv(hue=200, sat=1, br=.5)
-            lamps.set_hsv(hue=300, sat=1, br=.4)
+def set_preset(preset_name, group, method="LAN"):
 
-        elif preset == "preset_02":
-            strips.set_hsv(hue=50, sat=.7, br=.4)
-            lamps.set_hsv(hue=350, sat=.65, br=.3)
+    from lumacode.lifx import lifx
 
-        elif preset == "preset_03":
-            strips.set_hsv(hue=120, sat=.95, br=.5)
-            lamps.set_hsv(hue=230, sat=.75, br=.4)
+    presets = load_presets(group.lower())
 
-        elif preset == "preset_04":
-            strips.set_gradient([0, 0, .6], [.6, 0, 0], gradient_pattern='linear')
-            lamps.set_hsv(hue=230, sat=.75, br=.4)
+    try:
+        preset_data = presets[preset_name]
+        lights = lifx.get_lights(group=group, method=method)
 
-        elif preset == "preset_05":
-            strips.set_gradient([.4, 0, 0], [0, 0, .6], gradient_pattern='linear')
-            lamps.set_hsv(hue=270, sat=.8, br=.3)
+        for light in lights:
+            light_info = light.get_info()
 
-        elif preset == "movie":
-            strips.set_hsv(hue=0, sat=.85, br=.05, ke=2000)
-            lamps.set_hsv(hue=0, sat=.5, br=.05, ke=2000)
+            data = [x for x in preset_data if x['name'].lower().replace(' ', '_') == light_info['name'].lower().replace(' ', '_')]
+
+            if data:
+                data = data[0]
+                sat = data['sat']
+                br = data['br']
+                sat = float(sat / 100.0) if sat > 0 else 0
+                br = float(br / 100.0)
+
+                light.set_hsvk(hue=data['hue'], sat=sat, br=br, ke=data['kelvin'])
+
+    except KeyError:
+        print('invalid preset name?')
 
 
 if __name__ == "__main__":
-    main('warm')
+
+    presets = load_presets("study")
+    for x in presets:
+        print(x)

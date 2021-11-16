@@ -65,8 +65,7 @@ def get_ping():
     servers = [
         'speed.aussiebroadband.com.au',
         'mel1.speedtest.telstra.net',
-        'speedtest.mel.optusnet.com.au',
-        'geelong.vic.speedtest.optusnet.com.au'
+        'google.com'
     ]
 
     for server in servers:
@@ -87,5 +86,7 @@ def get_ping():
 
 
 if __name__ == "__main__":
-    a = get_packet_loss()
-    print(a)
+    # a = get_packet_loss()
+    # print(a)
+    ping = get_ping()
+    print(ping)

@@ -45,6 +45,10 @@ def address_new(category, zone=None, light_type=None, name=None):
                         if light_type in devices[device]['type']:
                             output_list.append({device: devices[device]})
 
+                    # Nothing specified, get all devices
+                    else:
+                        output_list.append({device: devices[device]})
+
     return output_list
 
 
@@ -118,7 +122,7 @@ if __name__ == "__main__":
     # subwoofer = address(category='smartplugs', name='subwoofer')
     # print(media_room_camera, subwoofer)
 
-    lights = address_new(category='lifx', zone='study')  # Get Lights Data
+    lights = address_new(category='lifx')  # Get Lights Data
     print(lights)
 
     # Get Inputs

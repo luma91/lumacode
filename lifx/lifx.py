@@ -1,393 +1,248 @@
 # Documentation
 # https://github.com/mclarkk/lifxlan
 
-import random
-import threading
-import time
-import colorsys
 import math
 
-from lifxlan import Light, MultiZoneLight, LifxLAN
+import lifxlan
 from lumacode import get_smartdevices
+from lumacode.lifx import functions, lifx_cloud
 
 global continue_cycle
 last_hue = 0
 
 
-def get_lights_old(light_names=None, group=None):
-
-    num_lights = 6  # Faster discovery, when specified
-    lan = LifxLAN(num_lights)
-
-    # Select by Name(s)
-    if group is None:
-        lights = []
-
-        # Convert to List
-        if type(light_names) is not list:
-            light_names = [light_names]
-
-        for light in light_names:
-
-            for _ in range(5):
-                try:
-                    light = lan.get_device_by_name(light)
-                    lights.append(light)
-
-                except:
-                    print('trying again')
-                    continue
-
-                else:
-                    break
-
-            else:
-                print('cannot get light: %s' % light)
-
-        return lights
-
-    # Select by Group
-    else:
-
-        for _ in range(5):
-
-            try:
-                lights = lan.get_devices_by_group(group).devices
-
-            except:
-                print('trying again')
-                continue
-
-            else:
-                return lights
-
-        else:
-            print('cannot get lights')
+def truncate(v):
+    return float('%.2f' % v)
 
 
-def get_lights(light_names=None, group=None):
-
-    # Set to List
-    if isinstance(light_names, list) is False:
-        light_names = [light_names]
+def create_light_objects(light_dict):
 
     light_objects = []
 
-    if group:
+    for light in light_dict:
+        name = list(light.keys())[0]
+        info = light[name]
+        ip = info['address']
+        mac = info['mac']
+        light_info = {'name': name, 'group': info['zone'], 'light_type': info['type']}
+        light_object = CustomLight(mac, ip, light_info)
+        # light_object.req_with_resp(lifxlan.GetService, lifxlan.StateService)
+        light_objects.append(light_object)
 
-        lights = get_smartdevices.address_new(category='lifx', zone=group)
+    return light_objects
+
+
+def get_lights(light_names=None, group=None, method='LAN'):
+
+    # Set to List
+    if light_names and isinstance(light_names, list) is False:
+        light_names = [light_names]
+
+    if method == 'LAN':
+
+        # Get Lights by Group
+        if group:
+
+            print('getting by group: %s' % group)
+            lights = get_smartdevices.address_new(category='lifx', zone=group.lower())
+            light_objects = create_light_objects(lights)
+            return light_objects
+
+        # Get Lights by Name
+        if light_names:
+
+            lights = []
+            for light_name in light_names:
+                lights.append(get_smartdevices.address_new(category='lifx', name=light_name)[0])
+
+            light_objects = create_light_objects(lights)
+            return light_objects
+
+        # All Lights
+        else:
+            light_objects = create_light_objects(get_smartdevices.address_new(category='lifx'))
+            return light_objects
+
+    if method == 'CLOUD':
+
+        lights = lifx_cloud.get_lights(group)
+        result = []
 
         for light in lights:
-            ip_address = light[list(light.keys())[0]]['address']
-            mac = light[list(light.keys())[0]]['mac']
-            light_object = Light(ip_addr=ip_address, mac_addr=mac)
-            light_objects.append(light_object)
+            result.append(lifx_cloud.CustomLight(light))
 
-    if light_names:
-
-        for light_name in light_names:
-
-            lights = get_smartdevices.address_new(category='lifx', name=light_name)
-
-            for light in lights:
-                ip_address = light[light_name]['address']
-                mac = light[light_name]['mac']
-                light_object = Light(ip_addr=ip_address, mac_addr=mac)
-                light_objects.append(light_object)
-
-        return light_objects
+        return result
 
 
-def get_zones(mac, ip):
+class CustomLight(lifxlan.MultiZoneLight):
 
-    try:
-        light = MultiZoneLight(mac, ip)
+    def __init__(self, mac, ip, light_info=None):
+        super(CustomLight, self).__init__(mac, ip)
 
-        if light.supports_multizone() is True:
-            color_zones = light.get_color_zones()
-            return len(color_zones)
+        # Static Vars
+        self.name = None
+        self.group = None
+        self.light_type = None
+
+        # Dynamic Vars
+        self.color = {'hue': 0, 'saturation': 0, 'kelvin': 0}
+        self.brightness = 0
+
+        # Get Static Info
+        if light_info:
+            self.name = light_info['name']
+            self.group = light_info['group']
+            self.light_type = light_info['light_type']
 
         else:
-            print('not a multizone compatible light')
+            self.get_static_info()
 
-    except Exception as e:
-        print(e)
+    def get_stored_info(self):
 
+        light_data = {
+            'name': self.name,
+            'group': self.group,
+            'light_type': self.light_type,
+            'hue': self.color['hue'],
+            'sat': self.color['saturation'],
+            'br': self.brightness,
+            'kelvin': self.color['kelvin'],
+        }
 
-def power_status(mac, ip):
+        return light_data
 
-    try:
-        light = Light(mac, ip)
-        power_state = light.get_power()
+    @functions.retry_on_failure()
+    def get_static_info(self):
 
-        return power_state
+        self.name = self.get_label()
+        self.group = self.get_group()
+        self.light_type = 'strip' if 'LIFX Z' in self.get_product_name() else 'lamp'
 
-    except Exception as e:
-        print(e)
+    @functions.retry_on_failure()
+    def get_info(self):
 
+        """ This function will query the state of the light and update """
 
-def make_rgb_colour(r, g, b, k=0.5):
+        hue, sat, br, kelvin = self.get_color()
+        hue = int((hue / 65535) * 360)
+        sat = int((sat / 65535) * 100)
+        br = int((br / 65535) * 100)
 
-    """
+        # Update Dynamic Vars
+        self.color = {'hue': hue, 'saturation': sat, 'kelvin': kelvin}
+        self.brightness = br
 
-    Return (Hue, Saturation, Brightness, Kelvin)
-    Input values ranging from 0 to 1
+        return self.get_stored_info()
 
-    """
-
-    # RGB to HSV
-    hue, saturation, brightness = colorsys.rgb_to_hsv(r, g, b)
-
-    # HSV to LIFX format
-    hue = hue * 65535
-    saturation = saturation * 65535
-    brightness = brightness * 65535
-    kelvin = 2500 + k * (9000-2500)
-
-    return [hue, saturation, brightness, kelvin]
-
-
-class Connection:
-
-    def __init__(self, lifx_lights):
-
-        if type(lifx_lights) is list:
-            self.lifx_lights = lifx_lights
-        else:
-            self.lifx_lights = [lifx_lights]
-
-    def lifx_get_values(self):
-
-        output = ""
-
-        for light in self.lifx_lights:
-            try:
-                hue, sat, br, kelvin = light.get_color()
-
-                hue = int(hue / 65535 * 360)
-                sat = int(sat / 65535 * 100)
-                br = int(br / 65535 * 100)
-
-                output = (hue, sat, br)
-            except Exception as e:
-
-                print(e)
-
-        return output
-
+    @functions.retry_on_failure()
     def toggle_power(self):
 
-        for light in self.lifx_lights:
+        power_state = self.get_power()
 
-            try:
-                power_state = light.get_power()
+        if power_state == 0:
+            self.set_power(1)
 
-                if power_state == 0:
-                    light.set_power(1)
+        elif power_state > 0:
+            self.set_power(0)
 
-                elif power_state > 0:
-                    light.set_power(0)
-
-            except Exception as e:
-                print(e)
-
+    @functions.retry_on_failure()
     def power_off(self):
 
-        for light in self.lifx_lights:
-            light.set_power(0)
+        self.set_power(0)
 
+    @functions.retry_on_failure()
     def power_on(self):
 
-        for light in self.lifx_lights:
-            light.set_power(65535)
+        self.set_power(65535)
 
+    @functions.retry_on_failure()
     def set_rgb(self, r, g, b, duration=1):
 
-        hue, sat, br, ke = make_rgb_colour(r, g, b)
+        hue, sat, br, ke = functions.make_rgb_colour(r, g, b)
+        self.set_color([hue, sat, br, ke], duration=duration * 1000, rapid=True)
 
-        for light in self.lifx_lights:
-            try:
-                light.set_color([hue, sat, br, ke], duration=duration * 1000, rapid=False)
-
-            except Exception as e:
-                print(e)
-
-    def set_hsv(self, hue, sat, br, ke=5000, duration=1):
+    @functions.retry_on_failure()
+    def set_hsvk(self, hue, sat, br, ke=5000, duration=1):
 
         hue = (hue / 360) * 65535
         sat = sat * 65535
         br = br * 65535
+        self.set_color([hue, sat, br, ke], duration=duration*1000, rapid=True)
 
-        for light in self.lifx_lights:
-            try:
-                light.set_color([hue, sat, br, ke], duration=duration*1000, rapid=False)
+    @functions.retry_on_failure()
+    def set_raw_hsvk(self, hue, sat, br, ke=5000, duration=1):
 
-            except Exception as e:
-                print(e)
+        """ Don't convert the values """
+        self.set_color([hue, sat, br, ke], duration=duration*1000, rapid=True)
 
+    @functions.retry_on_failure()
     def set_gradient(self, start, end, gradient_pattern='linear', duration=1):
 
-        for light in self.lifx_lights:
+        # Iterate over the zones
+        number_of_zones = len(self.get_color_zones())
+        for zone in range(number_of_zones):
 
-            try:
-                number_of_zones = len(light.get_color_zones())
+            # Linear
+            factor = (zone / number_of_zones)
+            new_factor = factor
 
-                # Iterate over the zones
-                last_zone = 0
-                for zone in range(number_of_zones):
+            if gradient_pattern == 'center':
+                new_factor = factor * 2
+                if new_factor > 1:
+                    new_factor = factor / 2
 
-                    # Linear
-                    factor = (zone / number_of_zones)
-                    new_factor = factor
+            # Tile
+            if gradient_pattern == 'tile':
 
-                    if gradient_pattern == 'center':
-                        new_factor = factor * 2
-                        if new_factor > 1:
-                            new_factor = factor / 2
+                new_factor = math.sin(factor)
+                print(new_factor)
 
-                    # Tile
-                    if gradient_pattern == 'tile':
+            start_r = (start[0] * (1 - new_factor))
+            start_g = (start[1] * (1 - new_factor))
+            start_b = (start[2] * (1 - new_factor))
+            end_r = (end[0] * new_factor)
+            end_g = (end[1] * new_factor)
+            end_b = (end[2] * new_factor)
+            r = start_r + end_r
+            g = start_g + end_g
+            b = start_b + end_b
+            color_value = functions.make_rgb_colour(r, g, b)
+            self.set_zone_color(
+                start_index=zone,
+                end_index=zone,
+                color=color_value,
+                duration=duration*1000,
+                rapid=True
+            )
 
-                        new_factor = math.sin(factor)
-                        print(new_factor)
-
-                    start_r = (start[0] * (1 - new_factor))
-                    start_g = (start[1] * (1 - new_factor))
-                    start_b = (start[2] * (1 - new_factor))
-                    end_r = (end[0] * new_factor)
-                    end_g = (end[1] * new_factor)
-                    end_b = (end[2] * new_factor)
-                    r = start_r + end_r
-                    g = start_g + end_g
-                    b = start_b + end_b
-                    color_value = make_rgb_colour(r, g, b)
-                    light.set_zone_color(start_index=zone, end_index=zone, color=color_value, duration=duration*1000, rapid=False)
-
-            except Exception as e:
-                print(e)
-
-    def color_rainbow(self, daemon, sync, interval, duration, br, sat):
-
-        global continue_cycle
-        continue_cycle = True
-
-        for light in self.lifx_lights:
-            threading.Thread(target=ColorRainbowWorker, daemon=daemon, args=(sync, light, interval, duration, br, sat)).start()
-
-    @staticmethod
-    def stop_color_rainbow():
-
-        global continue_cycle
-        continue_cycle = False
-
-    def set_brightness(self, br):
-
-        br = br * 65535
-
-        try:
-            for x in self.lifx_lights:
-                mac, ip = x[0], x[1]
-                light = Light(mac, ip)
-                current_hue, current_sat, current_br, current_ke = light.get_color()
-                light.set_color([current_hue, current_sat, br, current_ke], duration=.1 * 1000, rapid=False)
-
-        except Exception as e:
-            print(e)
-
-
-class ColorRainbowWorker:
-
-    global continue_cycle
-    global last_hue
-
-    def __init__(self, sync, lifx_light, interval, duration, br, sat):
-
-        self.continue_cycle = continue_cycle
-        self.last_hue = last_hue
-        self.sync = sync
-        self.lifx_light = lifx_light
-        self.interval = interval
-        self.duration = duration
-        self.br = br
-        self.sat = sat
-
-        # Create Infinite Loop that doesn't die if there's a communication issue.
-        while self.continue_cycle is True:
-
-            try:
-                self.worker_loop()
-
-            except Exception as e:
-                print(e)
-                continue
-        else:
-            print("Closing Rainbow Thread")
-            exit()
-
-    def worker_loop(self):
-
-        global continue_cycle
-        random_hue = random.randint(0, 360)
-
-        # If Last Hue is defined it means it crashed, else its a new thread!
-        try:
-            if self.sync is False:
-                current_hue = random_hue
-
-            else:
-                current_hue = self.last_hue
-
-        except NameError:
-
-            if self.sync is True:
-                current_hue = 0
-            else:
-                current_hue = random_hue
-
-        ke = 4000
-        sat = self.sat * 65535
-        br = self.br * 65535
-
-        while self.continue_cycle is True:
-
-            self.continue_cycle = continue_cycle
-
-            if self.lifx_light:
-
-                current_hue += self.interval  # Amount to shift hue
-
-                if current_hue > 360:
-                    current_hue = 0
-
-                hue = (current_hue / 360) * 65535
-
-                # Protect against integer overflow
-                if hue > 65535:
-                    hue = 65535
-
-                if self.duration > .5:
-                    transition_time = self.duration
-
-                else:
-                    transition_time = .5
-
-                self.lifx_light.set_color([hue, sat, br, ke], duration=100 + (transition_time * 1000))
-
-                time.sleep(self.duration + .01)
-                self.last_hue = current_hue
+    @functions.retry_on_failure()
+    def set_value(self, brightness, duration=500):
+        brightness = brightness * 65535
+        self.set_brightness(brightness, duration, rapid=True)
 
 
 if __name__ == "__main__":
 
     # Power on all Media Room Lights
-    # x = get_lights(['desk_strip', 'left_lamp'])
-    x = get_lights(group='study')
+    # all_lights = get_lights()
+    # light_addresses = get_smartdevices.address_new(category='lifx')
+    # lights = get_lights(light_addresses)
+    # print(light_addresses)
+    lgts = get_lights(group='Study', method="CLOUD")
+    for x in lgts:
+        x.toggle_power()
 
-    # x = get_lights(light_names='desk_strip')
-    # print(x)
+    # c = Connection(x)
+    # Nx.toggle_power()
+    # print(c)
 
-    c = Connection(x)
-    c.toggle_power()
+    # for lgt in all_lights:
+        # lgt.power_off()
+        # print(lgt.power_on())
+        # lgt.set_value(0.5)
+    #    print(lgt)
+        # print(lgt.get_info())
+        # print(x.get_group_label)
     # c.set_gradient([0, 0, .6], [.6, 0, 0], gradient_pattern='linear')
 
     # print(lights)

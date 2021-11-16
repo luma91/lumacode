@@ -1,0 +1,59 @@
+
+<div class="slidecontainer">
+  <p>hue: <span class="value" id="hue_value"></span></p>
+  <input type="range" min="0" max="360" step="1" value="%HUEVALUE%" class="slider" id="hue_slider" onchange="set_light_value('hue', this.value)">
+</div>
+
+<div class="slidecontainer">
+  <p>saturation: <span class="value" id="sat_value"></span></p>
+  <input type="range" min="0" max="100" step="1" value="%SATVALUE%" class="slider" id="sat_slider" onchange="set_light_value('sat', this.value)">
+</div>
+
+<div class="slidecontainer">
+   <p>brightness: <span class="value" id="br_value"></span></p>
+  <input type="range" min="0" max="100" step="1" value="%BRVALUE%" class="slider" id="br_slider" onchange="set_light_value('br', this.value)">
+</div>
+
+<div class="slidecontainer">
+  <p>kelvin: <span class="value" id="ke_value"></span></p>
+  <input type="range" min="2000" max="9000" step="1" value="%KEVALUE%" class="slider" id="ke_slider" onchange="set_light_value('ke', this.value)">
+</div>
+
+
+<script>
+
+var hue_slider = document.getElementById("hue_slider");
+var sat_slider = document.getElementById("sat_slider");
+var br_slider = document.getElementById("br_slider");
+var ke_slider = document.getElementById("ke_slider");
+
+var hue_output = document.getElementById("hue_value");
+var sat_output = document.getElementById("sat_value");
+var br_output = document.getElementById("br_value");
+var ke_output = document.getElementById("ke_value");
+
+hue_output.innerHTML = hue_slider.value;
+hue_slider.oninput = function() {
+  hue_output.innerHTML = this.value;
+  convert_hsv_to_rgb();
+}
+
+sat_output.innerHTML = sat_slider.value;
+sat_slider.oninput = function() {
+  sat_output.innerHTML = this.value;
+  convert_hsv_to_rgb();
+}
+
+br_output.innerHTML = br_slider.value;
+br_slider.oninput = function() {
+  br_output.innerHTML = this.value;
+  convert_hsv_to_rgb();
+}
+
+ke_output.innerHTML = ke_slider.value;
+ke_slider.oninput = function() {
+  ke_output.innerHTML = this.value;
+  convert_hsv_to_rgb();
+}
+
+</script>

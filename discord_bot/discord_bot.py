@@ -1,18 +1,15 @@
 # https://discordpy.readthedocs.io/en/latest/
 # https://discordpy.readthedocs.io/en/latest/faq.html#how-do-i-send-a-message-to-a-specific-channel
 
-import json
 import os
 import random
-import subprocess
 import sys
-import threading
 
 import discord
 import pyHS100
 from wakeonlan import send_magic_packet
 
-from lumacode.discord_bot import bot_functions
+from lumacode.discord_bot import bot_functions, constants
 from lumacode.lifx import lifx, lifx_presets
 from lumacode import luma_log, get_smartdevices, receiver
 
@@ -29,42 +26,6 @@ script_path = os.path.split(__file__)[0]
 color = [.3, .4, 0, 0.5]
 
 base_path = os.path.dirname(__file__)
-with open(os.path.join(base_path, 'bot_data.json')) as f:
-    bot_data = json.loads(f.read())
-
-# Define this in bot_data.json in same folder
-client_secret = bot_data['client_secret']
-client_id = bot_data['client_id']
-token = bot_data['token']
-bot_name = bot_data['bot_name']
-username = bot_data['username']
-bot_id = bot_data['bot_id']
-channel_id = bot_data['channel_id']
-trusted_users = bot_data['trusted_users']
-
-
-# Check For Episodes
-def check_new_episodes():
-
-    client = discord.Client()
-
-    @client.event
-    async def on_ready():
-        print("Watching Episodes.")
-        channel = client.get_channel(channel_id)
-
-        # Check for new episodes
-        await bot_functions.check_new_episodes(client, channel)
-
-    @client.event
-    async def on_message(message):
-
-        message_content = message.content.lower()
-        if "!logout" in message_content:
-            await client.logout()
-            sys.exit()
-
-    client.run(token)
 
 
 # Primary Bot Functions
@@ -83,9 +44,9 @@ def discord_bot():
 
         # Turn on Lights
         try:
-            lights = lifx.get_lights(group='Study')
-            c = lifx.Connection(lights)
-            c.power_on()
+            lights = lifx.get_lights(method="CLOUD")
+            for x in lights:
+                x.power_on()
 
         except Exception as e:
             logger.error(e)
@@ -127,6 +88,10 @@ def discord_bot():
     @client.event
     async def on_message(message):
 
+        # Make sure we're on the right channel
+        if str(message.channel) != "general":
+            return
+
         if message.author is not client.user:
 
             logger.info('user: %s msg: %s' % (message.author, message.content))
@@ -153,7 +118,7 @@ def discord_bot():
                 response = 'Bye ' + message.author.mention + ' have a nice day!'
 
             # Respond to my Name!
-            elif bot_name.lower() in message_content or str(bot_id) in message_content:
+            elif constants.bot_name.lower() in message_content or str(constants.bot_id) in message_content:
 
                 # Generic response
                 response = 'Hey ' + message.author.mention + ', What\'s up?'
@@ -205,7 +170,7 @@ def discord_bot():
             # //////////////////////////////////////////////////////////////////
             # Smart Home Stuff!
             else:
-                if any(user in str(message.author) for user in trusted_users):
+                if any(user in str(message.author) for user in constants.trusted_users):
 
                     # Get Smart Devices
                     kitchen_camera = pyHS100.SmartPlug(get_smartdevices.address(category='smartplugs', name='kitchen_camera'))
@@ -240,13 +205,9 @@ def discord_bot():
                             logger.exception(e)
                             response = "I could not do this. sorry...  please try again!"
 
-                        lights = lifx.get_lights(group='Study')
-                        c = lifx.Connection(lights)
-                        c.power_off()
-
-                        lights = lifx.get_lights(group='Living Room')
-                        c = lifx.Connection(lights)
-                        c.power_off()
+                        lights = lifx.get_lights(method="CLOUD")
+                        for x in lights:
+                            x.power_off()
 
                         subwoofer.turn_off()
 
@@ -275,7 +236,7 @@ def discord_bot():
                             logger.exception(e)
                             response = "I could not do this. sorry...  please try again!"
 
-                        lifx_presets.main('movie', zone='Living Room')
+                        lifx_presets.set_preset('movie', 'living_room')
 
                     elif "camera" in message_content:
 
@@ -306,72 +267,82 @@ def discord_bot():
                     # Lights On/Off
                     elif "lights" in message_content:
 
-                        study_lights = lifx.Connection(lifx.get_lights(group='Study'))
-                        living_lights = lifx.Connection(lifx.get_lights(group='Living Room'))
-
                         # Study
                         if "study" in message_content:
 
-                            if "on" in message_content:
-                                study_lights.power_on()
-                                response = "Study lights on!"
+                            if "on" or "off" in message_content:
+                                study_lights = lifx.get_lights(group='Study', method="CLOUD")
 
-                            if "off" in message_content:
-                                study_lights.power_off()
-                                response = "Study lights off!"
+                                if "on" in message_content:
+                                    for x in study_lights:
+                                        x.power_on()
+                                    response = "Study lights on!"
 
-                            for preset in lifx_presets.presets:
+                                if "off" in message_content:
+                                    for x in study_lights:
+                                        x.power_off()
+                                    response = "Study lights off!"
+
+                            presets = lifx_presets.load_presets('Study')
+                            for preset in presets:
 
                                 # Exact Match (example: study lights preset_01)
                                 match = 0
                                 split_message = message_content.split()
                                 if len(split_message) == 3:
                                     if preset.lower() == split_message[2].lower():
-                                        lifx_presets.main(preset, zone="Study")
+                                        lifx_presets.set_preset(preset, group="Study")
                                         match = 1
 
                                 # Any Match
                                 if match == 0:
                                     if preset.lower() in message_content:
-                                        lifx_presets.main(preset, zone="Study")
+                                        lifx_presets.set_preset(preset, group="Study")
 
                         # Living Room
                         elif 'living' in message_content:
 
-                            if "on" in message_content:
-                                response = "Let there be light!"
-                                living_lights.power_on()
+                            if "on" or "off" in message_content:
+                                living_lights = lifx.get_lights(group='Living Room', method="CLOUD")
 
-                            elif "off" in message_content:
-                                response = "Enjoy the darkness...."
-                                living_lights.power_off()
+                                if "on" in message_content:
+                                    response = "Let there be light!"
+                                    for x in living_lights:
+                                        x.power_on()
 
-                            for preset in lifx_presets.presets:
+                                elif "off" in message_content:
+                                    response = "Enjoy the darkness...."
+                                    for x in living_lights:
+                                        x.power_off()
+
+                            presets = lifx_presets.load_presets('Living Room')
+                            for preset in presets:
 
                                 # Exact Match (example: study lights preset_01)
                                 match = 0
                                 split_message = message_content.split()
                                 if len(split_message) == 3:
                                     if preset.lower() == split_message[2].lower():
-                                        lifx_presets.main(preset, zone="Living Room")
+                                        lifx_presets.set_preset(preset, group="Living Room")
                                         match = 1
 
                                 # Any Match
                                 if match == 0:
                                     if preset.lower() in message_content:
-                                        lifx_presets.main(preset, zone="Living Room")
+                                        lifx_presets.set_preset(preset, group="Living Room")
 
                         # All Lights
                         else:
+
+                            lights = lifx.get_lights(method="CLOUD")
+
                             if "on" in message_content:
                                 response = "Let there be light!"
-                                study_lights.power_on()
-                                living_lights.power_on()
+                                lights.power_on()
 
                             elif "off" in message_content:
                                 response = "Enjoy the darkness...."
-                                study_lights.power_off()
-                                living_lights.power_off()
+                                lights.power_off()
 
                     # Receiver Volume
                     elif ("make" in message_content) or ("turn" in message_content):
@@ -399,47 +370,11 @@ def discord_bot():
             return
 
     # Run
-    client.run(token)
-
-
-# Thread for Checking new Episodes!
-def check_episodes_thread():
-
-    cmd = [python_bin, '-c', 'import sys\nsys.path.append(\'' + script_path + '\')\n' +
-           'import discord_bot, importlib\nimportlib.reload(discord_bot)\ndiscord_bot.check_new_episodes()']
-
-    proc = subprocess.Popen(cmd).communicate()
-    _stdout, _stderr = proc
-
-    if _stdout:
-        logger.info(_stdout)
-
-    if _stderr:
-        logger.exception(_stderr)
-
-
-def discord_bot_thread():
-
-    cmd = [python_bin, '-c', 'import sys\nsys.path.append(\'' + script_path + '\')\n' +
-           'import discord_bot, importlib\nimportlib.reload(discord_bot)\ndiscord_bot.discord_bot()']
-
-    proc = subprocess.Popen(cmd).communicate()
-    _stdout, _stderr = proc
-
-    # if _stdout:
-    #     logger.info(_stdout)
-
-    if _stderr:
-        logger.exception(_stderr)
+    client.run(constants.token)
 
 
 # Run
 if __name__ == "__main__":
 
     print("Running Discord Bot")
-
-    # Run Threads
-    t1 = threading.Thread(target=discord_bot_thread, daemon=True)
-    t2 = threading.Thread(target=check_new_episodes, daemon=True)
-    t1.start()
-    t2.run()
+    discord_bot()

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="${STYLESHEET_PATH}">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script>
+
+    // URL params
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const group = urlParams.get('group');
+    const light = urlParams.get('light');
+
+    // Send JSON Data
+    function send_JSON(data_to_send) {
+                $.ajax({
+                type: "post",
+                url: "/commands",
+                contentType: 'application/json',
+                data: JSON.stringify(data_to_send),
+                processData: false,
+                error: function (response) {
+                    if (response) {
+                        alert(response.responseText);
+                    }
+                }
+            });
+    };
+
+    // Set Preset
+    function set_preset(group, value) {
+           var data_to_send = {
+               command_type: 'preset',
+               group: group,
+               value: value
+           };
+
+           send_JSON(data_to_send);
+    };
+
+    // Set Light Value
+    function set_light_value(field, value) {
+           var data_to_send = {
+               command_type: 'set_light',
+               group: group,
+               light: light,
+               field: field,
+               value: value
+           };
+
+           send_JSON(data_to_send);
+    };
+
+    // Toggle Power
+    function toggle_power(group, light) {
+           var data_to_send = {
+               command_type: 'toggle_power',
+               group: group,
+               light: light
+           };
+
+           send_JSON(data_to_send);
+    };
+
+    function rgb_parse(r, g, b){
+        return `rgb(${r}, ${g}, ${b})`
+    }
+
+    // Make RGB preview
+    function convert_hsv_to_rgb() {
+
+        var hue = document.getElementById("hue_value").innerHTML;
+        var sat = document.getElementById("sat_value").innerHTML;
+        var val = document.getElementById("br_value").innerHTML;
+        var kelvin = document.getElementById("ke_value").innerHTML;
+
+        // console.log('hue: ' + hue + ' sat: ' + sat + ' val: ' + val + ' ke: ' + kelvin)
+
+        var data_to_send = {
+            command_type: 'hsv_to_rgb',
+            hue: hue,
+            sat: sat,
+            br: val,
+            kelvin: kelvin
+        }
+
+       $.ajax({
+            type: "post",
+            url: "/commands",
+            contentType: 'application/json',
+            data: JSON.stringify(data_to_send),
+            processData: false,
+            success: function (response) {
+                if (response) {
+                    updateResult(response)
+                }
+            }
+       });
+    };
+
+
+    // Update Result
+    function updateResult(response) {
+        var rgb = JSON.parse(response);
+        // console.log(rgb);
+        document.getElementById("light").style.backgroundColor = rgb_parse(rgb[0], rgb[1], rgb[2]);
+    };
+
+    </script>
+
+    <title>Lifx Web</title>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">Lifx Web</div>
+
+    ${PAGE_CONTENT}
+
+</div>
+
+</body>
+</html>
+
